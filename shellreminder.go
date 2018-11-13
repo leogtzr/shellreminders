@@ -110,6 +110,36 @@ func (r Reminder) String() string {
 	return out.String()
 }
 
+func isWeekend(d time.Time) bool {
+	return d.Weekday() == time.Saturday || d.Weekday() == time.Sunday
+}
+
+func buildTime(r *Reminder) time.Time {
+	now := time.Now()
+	d := time.Date(now.Year(), now.Month(), r.EveryWhen, 0, 0, 0, 0, time.UTC)
+	return d
+}
+
+func simpleDateFormat(t *time.Time) string {
+	return fmt.Sprintf("%d/%d/%d", t.Year(), t.Month(), t.Day())
+}
+
+func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) string {
+	var out bytes.Buffer
+
+	out.WriteString(fmt.Sprintf("Remaining days for %s :%d ", r.Name, remainingDays))
+	d := buildTime(r)
+	if isWeekend(d) {
+		out.WriteString("| WARNING! it")
+		out.WriteString(" will be ")
+		out.WriteString(d.Weekday().String())
+		out.WriteString(" (")
+		out.WriteString(simpleDateFormat(&d))
+		out.WriteString(")")
+	}
+	return out.String()
+}
+
 func main() {
 
 	// Check if the .shellreminder directory exists ...
@@ -134,7 +164,8 @@ func main() {
 		remainingDays := r.EveryWhen - today.Day()
 		cmdName := "toilet"
 
-		cmdArgs := []string{"-f", "term", "-F", "border", fmt.Sprintf(fmt.Sprintf(" Remaining days for '%s' : %d ", r.Name, remainingDays))}
+		msg := buildReminderMessage(r.Name, remainingDays, &r)
+		cmdArgs := []string{"-f", "term", "-F", "border", msg}
 		if cmdOut, err := exec.Command(cmdName, cmdArgs...).Output(); err != nil {
 			fmt.Fprintln(os.Stderr, "there was an error running the command: ", err)
 			os.Exit(1)
