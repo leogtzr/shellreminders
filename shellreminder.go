@@ -127,11 +127,10 @@ func simpleDateFormat(t *time.Time) string {
 func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) string {
 	var out bytes.Buffer
 
-	out.WriteString(fmt.Sprintf("Remaining days for %s :%d ", r.Name, remainingDays))
+	out.WriteString(fmt.Sprintf("Remaining days for '%s' :%d ", r.Name, remainingDays))
 	d := buildTime(r)
 	if isWeekend(d) {
-		out.WriteString("| WARNING! it")
-		out.WriteString(" will be ")
+		out.WriteString("| WARNING! ")
 		out.WriteString(d.Weekday().String())
 		out.WriteString(" (")
 		out.WriteString(simpleDateFormat(&d))
