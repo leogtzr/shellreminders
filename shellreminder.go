@@ -65,6 +65,9 @@ func parseRemindersFromFile(filePath string) ([]Reminder, error) {
 		if len(line) == 0 {
 			continue
 		}
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
 		reminder, err := extractReminderFromText(line)
 		if err != nil {
 			return []Reminder{}, err
