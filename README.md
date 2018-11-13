@@ -10,3 +10,12 @@ Shows reminders in my terminal.
 │ Remaining days for 'Promotions' : 1 │
 └─────────────────────────────────────┘
 ```
+
+Configuration (input) file:
+
+```
+$ cat ~/.shellreminder/reminders 
+Santander Platino;18
+Promotions;13;counter
+
+```
