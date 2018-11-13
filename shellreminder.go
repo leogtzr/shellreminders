@@ -169,8 +169,7 @@ func main() {
 		msg := buildReminderMessage(r.Name, remainingDays, &r)
 		cmdArgs := []string{"-f", "term", "-F", "border", msg}
 		if cmdOut, err := exec.Command(cmdName, cmdArgs...).Output(); err != nil {
-			fmt.Fprintln(os.Stderr, "there was an error running the command: ", err)
-			os.Exit(1)
+			fmt.Println(msg)
 		} else {
 			fmt.Print(string(cmdOut))
 		}
