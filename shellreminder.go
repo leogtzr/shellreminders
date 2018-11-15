@@ -11,11 +11,27 @@ import (
 	"time"
 )
 
+// Reminder ...
+type Reminder struct {
+	Name      string
+	EveryWhen int
+	Type      ReminderType
+}
+
+// ReminderType ...
+type ReminderType int
+
 const (
+	// RecurrentReminder ...
+	RecurrentReminder ReminderType = 0
+	// Counter ...
+	Counter ReminderType = 1
+
 	// ShellReminderMainDirectory ...
 	ShellReminderMainDirectory = "/.shellreminder"
 	// RemindersFile ...
-	RemindersFile = ShellReminderMainDirectory + "/reminders"
+	RemindersFile            = ShellReminderMainDirectory + "/reminders"
+	minNumberOfRecordsInFile = 2
 )
 
 func existsFileOrDirectory(path string) bool {
@@ -29,7 +45,7 @@ func extractReminderFromText(text string) (Reminder, error) {
 	}
 	records := strings.Split(strings.TrimSpace(text), ";")
 
-	if len(records) < 2 {
+	if len(records) < minNumberOfRecordsInFile {
 		return Reminder{}, fmt.Errorf("not enough records in row ----> [%s]", text)
 	}
 
@@ -48,7 +64,7 @@ func extractReminderFromText(text string) (Reminder, error) {
 	}
 
 	reminderType := RecurrentReminder
-	if len(records) > 2 {
+	if len(records) > minNumberOfRecordsInFile {
 		if strings.TrimSpace(strings.ToLower(records[2])) == "counter" {
 			reminderType = Counter
 		} else {
@@ -56,6 +72,10 @@ func extractReminderFromText(text string) (Reminder, error) {
 		}
 	}
 	return Reminder{Name: name, EveryWhen: w, Type: reminderType}, nil
+}
+
+func shouldIgnoreLineInFile(line string) bool {
+	return len(line) == 0 || strings.HasPrefix(line, "#")
 }
 
 func parseRemindersFromFile(filePath string) ([]Reminder, error) {
@@ -68,10 +88,7 @@ func parseRemindersFromFile(filePath string) ([]Reminder, error) {
 
 	for input.Scan() {
 		line := strings.TrimSpace(input.Text())
-		if len(line) == 0 {
-			continue
-		}
-		if strings.HasPrefix(line, "#") {
+		if shouldIgnoreLineInFile(line) {
 			continue
 		}
 		reminder, err := extractReminderFromText(line)
@@ -83,23 +100,6 @@ func parseRemindersFromFile(filePath string) ([]Reminder, error) {
 
 	return reminders, nil
 }
-
-// Reminder ...
-type Reminder struct {
-	Name      string
-	EveryWhen int
-	Type      ReminderType
-}
-
-// ReminderType ...
-type ReminderType int
-
-const (
-	// RecurrentReminder ...
-	RecurrentReminder ReminderType = 0
-	// Counter ...
-	Counter ReminderType = 1
-)
 
 func (r Reminder) String() string {
 	var out bytes.Buffer
