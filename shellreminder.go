@@ -34,7 +34,13 @@ func extractReminderFromText(text string) (Reminder, error) {
 	}
 
 	name := records[0]
+	if len(strings.TrimSpace(name)) == 0 {
+		return Reminder{}, fmt.Errorf("reminder name cannot be empty")
+	}
 	when := records[1]
+	if len(strings.TrimSpace(when)) == 0 {
+		return Reminder{}, fmt.Errorf("reminder time cannot be empty")
+	}
 
 	w, err := strconv.Atoi(when)
 	if err != nil {
