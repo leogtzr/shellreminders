@@ -34,6 +34,8 @@ const (
 	minNumberOfRecordsInFile = 2
 
 	shellPresenterCommand = "toilet"
+
+	minDaysToShowInReminders = -3
 )
 
 func existsFileOrDirectory(path string) bool {
@@ -172,6 +174,10 @@ func main() {
 
 	for _, r := range reminders {
 		remainingDays := r.EveryWhen - today.Day()
+
+		if remainingDays < minDaysToShowInReminders {
+			continue
+		}
 
 		msg := buildReminderMessage(r.Name, remainingDays, &r)
 		cmdArgs := []string{"-f", "term", "-F", "border", msg}
