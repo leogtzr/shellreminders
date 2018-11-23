@@ -32,6 +32,8 @@ const (
 	// RemindersFile ...
 	RemindersFile            = ShellReminderMainDirectory + "/reminders"
 	minNumberOfRecordsInFile = 2
+
+	shellCommandPresenter = "toilet"
 )
 
 func existsFileOrDirectory(path string) bool {
@@ -170,11 +172,10 @@ func main() {
 
 	for _, r := range reminders {
 		remainingDays := r.EveryWhen - today.Day()
-		cmdName := "toilet"
 
 		msg := buildReminderMessage(r.Name, remainingDays, &r)
 		cmdArgs := []string{"-f", "term", "-F", "border", msg}
-		if cmdOut, err := exec.Command(cmdName, cmdArgs...).Output(); err != nil {
+		if cmdOut, err := exec.Command(shellCommandPresenter, cmdArgs...).Output(); err != nil {
 			fmt.Fprintln(os.Stderr, "there was an error running the command: ", err)
 			os.Exit(1)
 		} else {
