@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"testing"
+	"time"
 )
 
 func TestReminderFileParsing(t *testing.T) {
@@ -23,6 +24,12 @@ Promotions;13;counter
 	if len(reminders) != expectedRemindersCount {
 		t.Fatalf("error parsing reminder file, it should have had %d records, got=%d", expectedRemindersCount, len(reminders))
 	}
+}
+
+func generateBaseDateTime() time.Time {
+	now := time.Now()
+	then := time.Date(2018, now.Month(), now.Day(), 0 /*the hour */, 0 /* the minutes */, 0, 0, time.UTC)
+	return then
 }
 
 func TestReminderRecordParsing(t *testing.T) {

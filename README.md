@@ -1,5 +1,5 @@
 # shellreminders
-Shows reminders in my terminal.
+Shows reminders in my terminal about things that I have to pay soon, like credit cards ...
 
 ```
 ./shellreminders 
