@@ -175,14 +175,10 @@ func main() {
 
 		msg := buildReminderMessage(r.Name, remainingDays, &r)
 		cmdArgs := []string{"-f", "term", "-F", "border", msg}
-<<<<<<< HEAD
+
 		if cmdOut, err := exec.Command(shellPresenterCommand, cmdArgs...).Output(); err != nil {
 			fmt.Fprintln(os.Stderr, "there was an error running the command: ", err)
 			os.Exit(1)
-=======
-		if cmdOut, err := exec.Command(cmdName, cmdArgs...).Output(); err != nil {
-			fmt.Println(msg)
->>>>>>> 7040c1dd5f8251ab5c5c3fbd72dd7cd14d4f3b79
 		} else {
 			fmt.Print(string(cmdOut))
 		}
