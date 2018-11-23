@@ -33,7 +33,7 @@ const (
 	RemindersFile            = ShellReminderMainDirectory + "/reminders"
 	minNumberOfRecordsInFile = 2
 
-	shellCommandPresenter = "toilet"
+	shellPresenterCommand = "toilet"
 )
 
 func existsFileOrDirectory(path string) bool {
@@ -175,7 +175,7 @@ func main() {
 
 		msg := buildReminderMessage(r.Name, remainingDays, &r)
 		cmdArgs := []string{"-f", "term", "-F", "border", msg}
-		if cmdOut, err := exec.Command(shellCommandPresenter, cmdArgs...).Output(); err != nil {
+		if cmdOut, err := exec.Command(shellPresenterCommand, cmdArgs...).Output(); err != nil {
 			fmt.Fprintln(os.Stderr, "there was an error running the command: ", err)
 			os.Exit(1)
 		} else {
