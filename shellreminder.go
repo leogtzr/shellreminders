@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -152,7 +153,13 @@ func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) s
 	return out.String()
 }
 
-// func sortRemindersByDay(reminders [])
+func sortRemindersByDay(reminders *[]Reminder) {
+	sort.Slice(*reminders,
+		func(i, j int) bool {
+			return (*reminders)[i].EveryWhen > (*reminders)[j].EveryWhen
+		},
+	)
+}
 
 func main() {
 
@@ -173,6 +180,8 @@ func main() {
 	}
 
 	today := time.Now()
+
+	sortRemindersByDay(&reminders)
 
 	for _, r := range reminders {
 		remainingDays := r.EveryWhen - today.Day()
