@@ -33,7 +33,7 @@ const (
 	RemindersFile            = ShellReminderMainDirectory + "/reminders"
 	minNumberOfRecordsInFile = 2
 
-	shellPresenterCommand = "toilet"
+	shellPresenterCommand = "toiletx"
 
 	minDaysToShowInReminders = -3
 )
@@ -152,6 +152,8 @@ func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) s
 	return out.String()
 }
 
+// func sortRemindersByDay(reminders [])
+
 func main() {
 
 	// Check if the .shellreminder directory exists ...
@@ -183,8 +185,7 @@ func main() {
 		cmdArgs := []string{"-f", "term", "-F", "border", msg}
 
 		if cmdOut, err := exec.Command(shellPresenterCommand, cmdArgs...).Output(); err != nil {
-			fmt.Fprintln(os.Stderr, "there was an error running the command: ", err)
-			os.Exit(1)
+			fmt.Println(msg)
 		} else {
 			fmt.Print(string(cmdOut))
 		}
