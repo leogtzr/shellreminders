@@ -134,7 +134,7 @@ func buildTime(r *Reminder) time.Time {
 	return d
 }
 
-func simpleDateFormat(t *time.Time) string {
+func formatDate(t *time.Time) string {
 	return fmt.Sprintf("%d/%d/%d", t.Year(), t.Month(), t.Day())
 }
 
@@ -152,7 +152,7 @@ func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) s
 		out.WriteString("| WARNING! ")
 		out.WriteString(d.Weekday().String())
 		out.WriteString(" (")
-		out.WriteString(simpleDateFormat(&d))
+		out.WriteString(formatDate(&d))
 		out.WriteString(")")
 	}
 	return out.String()
