@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"math"
 	"os"
 	"os/exec"
 	"sort"
@@ -37,7 +36,9 @@ const (
 
 	shellPresenterCommand = "toilet"
 
-	minDaysToShowInReminders = -3
+	minimumDaysAgo = 2
+
+	lessThanDays = 7
 )
 
 func existsFileOrDirectory(path string) bool {
@@ -125,38 +126,12 @@ func (r Reminder) String() string {
 	return out.String()
 }
 
-func isWeekend(d time.Time) bool {
+func isWeekend(d *time.Time) bool {
 	return d.Weekday() == time.Saturday || d.Weekday() == time.Sunday
-}
-
-func buildTime(r *Reminder) time.Time {
-	now := time.Now()
-	d := time.Date(now.Year(), now.Month(), r.EveryWhen, 0, 0, 0, 0, time.UTC)
-	return d
 }
 
 func formatDate(t *time.Time) string {
 	return fmt.Sprintf("%d/%d/%d", t.Year(), t.Month(), t.Day())
-}
-
-func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) string {
-	var out bytes.Buffer
-
-	d := buildTime(r)
-	if remainingDays == 0 {
-		out.WriteString(fmt.Sprintf("Remaining days for '%s' : TODAY!", r.Name))
-	} else if remainingDays < 0 {
-		out.WriteString(fmt.Sprintf("'%s' %d days ago (%s)", r.Name, int(math.Abs(float64(remainingDays))), formatDate(&d)))
-	}
-
-	if isWeekend(d) && remainingDays > 0 {
-		out.WriteString("| WARNING! ")
-		out.WriteString(d.Weekday().String())
-		out.WriteString(" (")
-		out.WriteString(formatDate(&d))
-		out.WriteString(")")
-	}
-	return out.String()
 }
 
 func sortRemindersByDay(reminders *[]Reminder) {
@@ -185,21 +160,33 @@ func main() {
 		panic(err)
 	}
 
-	today := time.Now()
+	cmdArgs := []string{"-f", "term", "-F", "border"}
 
 	sortRemindersByDay(&reminders)
 
+	now := time.Now()
 	for _, r := range reminders {
-		remainingDays := r.EveryWhen - today.Day()
+		next := time.Date(now.Year(), now.Month(), now.Day()+r.EveryWhen, 0, 0, 0, 0, time.UTC)
+		current := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 
-		if remainingDays < minDaysToShowInReminders {
+		remainingDays := next.Sub(current).Hours() / 24
+		msg := ""
+
+		if int(remainingDays) == current.Day() {
+			msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&current))
+		} else if int(remainingDays) <= lessThanDays {
+			if isWeekend(&next) {
+				msg = fmt.Sprintf("'%s' in less than %d days (WEEKEND) (%s)", r.Name, int(remainingDays), formatDate(&next))
+			} else {
+				msg = fmt.Sprintf("'%s' in less than %d days (%s)", r.Name, int(remainingDays), formatDate(&next))
+			}
+		} else if (current.Day() > int(remainingDays)) && ((current.Day() - int(remainingDays)) <= minimumDaysAgo) {
+			msg = r.String() + " days ago"
+		} else {
 			continue
 		}
 
-		msg := buildReminderMessage(r.Name, remainingDays, &r)
-		cmdArgs := []string{"-f", "term", "-F", "border", msg}
-
-		if cmdOut, err := exec.Command(shellPresenterCommand, cmdArgs...).Output(); err != nil {
+		if cmdOut, err := exec.Command(shellPresenterCommand, append(cmdArgs, msg)...).Output(); err != nil {
 			fmt.Println(msg)
 		} else {
 			fmt.Print(string(cmdOut))
