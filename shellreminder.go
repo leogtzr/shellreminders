@@ -146,7 +146,7 @@ func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) s
 	if remainingDays == 0 {
 		out.WriteString(fmt.Sprintf("Remaining days for '%s' : TODAY!", r.Name))
 	} else if remainingDays < 0 {
-		out.WriteString(fmt.Sprintf("'%s' %d ago (%s)", r.Name, int(math.Abs(float64(remainingDays))), formatDate(&d)))
+		out.WriteString(fmt.Sprintf("'%s' %d days ago (%s)", r.Name, int(math.Abs(float64(remainingDays))), formatDate(&d)))
 	}
 
 	if isWeekend(d) && remainingDays > 0 {
