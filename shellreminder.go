@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"sort"
@@ -34,7 +35,7 @@ const (
 	RemindersFile            = ShellReminderMainDirectory + "/reminders"
 	minNumberOfRecordsInFile = 2
 
-	shellPresenterCommand = "toiletx"
+	shellPresenterCommand = "toilet"
 
 	minDaysToShowInReminders = -3
 )
@@ -141,14 +142,14 @@ func formatDate(t *time.Time) string {
 func buildReminderMessage(reminderName string, remainingDays int, r *Reminder) string {
 	var out bytes.Buffer
 
+	d := buildTime(r)
 	if remainingDays == 0 {
 		out.WriteString(fmt.Sprintf("Remaining days for '%s' : TODAY!", r.Name))
-	} else {
-		out.WriteString(fmt.Sprintf("Remaining days for '%s' :%d ", r.Name, remainingDays))
+	} else if remainingDays < 0 {
+		out.WriteString(fmt.Sprintf("'%s' %d ago (%s)", r.Name, int(math.Abs(float64(remainingDays))), formatDate(&d)))
 	}
 
-	d := buildTime(r)
-	if isWeekend(d) {
+	if isWeekend(d) && remainingDays > 0 {
 		out.WriteString("| WARNING! ")
 		out.WriteString(d.Weekday().String())
 		out.WriteString(" (")
