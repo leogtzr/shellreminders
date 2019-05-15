@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,22 +17,13 @@ import (
 type Reminder struct {
 	Name      string
 	EveryWhen int
-	Type      ReminderType
 }
 
-// ReminderType ...
-type ReminderType int
-
 const (
-	// RecurrentReminder ...
-	RecurrentReminder ReminderType = 0
-	// Counter ...
-	Counter ReminderType = 1
 
 	// ShellReminderMainDirectory ...
-	ShellReminderMainDirectory = "/.shellreminder"
-	// RemindersFile ...
-	RemindersFile            = ShellReminderMainDirectory + "/reminders"
+	ShellReminderMainDirectory = ".shellreminder"
+
 	minNumberOfRecordsInFile = 2
 
 	shellPresenterCommand = "toilet"
@@ -70,15 +62,7 @@ func extractReminderFromText(text string) (Reminder, error) {
 		return Reminder{}, fmt.Errorf("second record should be numeric")
 	}
 
-	reminderType := RecurrentReminder
-	if len(records) > minNumberOfRecordsInFile {
-		if strings.TrimSpace(strings.ToLower(records[2])) == "counter" {
-			reminderType = Counter
-		} else {
-			return Reminder{}, fmt.Errorf("counter is the only explicit reminder type allowed for now [%s]", records[2])
-		}
-	}
-	return Reminder{Name: name, EveryWhen: w, Type: reminderType}, nil
+	return Reminder{Name: name, EveryWhen: w}, nil
 }
 
 func shouldIgnoreLineInFile(line string) bool {
@@ -117,12 +101,6 @@ func (r Reminder) String() string {
 	out.WriteString(fmt.Sprintf("%d", r.EveryWhen))
 	out.WriteString(" days. ")
 
-	if r.Type == RecurrentReminder {
-		out.WriteString("[recurrent reminder]")
-	} else {
-		out.WriteString("[counter]")
-	}
-
 	return out.String()
 }
 
@@ -144,18 +122,19 @@ func sortRemindersByDay(reminders *[]Reminder) {
 
 func main() {
 
-	// Check if the .shellreminder directory exists ...
-	if !existsFileOrDirectory(os.Getenv("HOME") + ShellReminderMainDirectory) {
+	remindersDir := path.Join(os.Getenv("HOME"), ShellReminderMainDirectory)
+	if !existsFileOrDirectory(remindersDir) {
 		fmt.Fprintf(os.Stderr, "%s does not exists\n", os.Getenv("HOME")+ShellReminderMainDirectory)
 		os.Exit(1)
 	}
 
-	if !existsFileOrDirectory(os.Getenv("HOME") + RemindersFile) {
-		fmt.Fprintf(os.Stderr, "%s file does not exists", (os.Getenv("HOME") + RemindersFile))
+	remindersFile := path.Join(remindersDir, "reminders")
+	if !existsFileOrDirectory(remindersFile) {
+		fmt.Fprintf(os.Stderr, "%s file does not exists\n", remindersFile)
 		os.Exit(1)
 	}
 
-	reminders, err := parseRemindersFromFile(os.Getenv("HOME") + RemindersFile)
+	reminders, err := parseRemindersFromFile(remindersFile)
 	if err != nil {
 		panic(err)
 	}
@@ -166,22 +145,29 @@ func main() {
 
 	now := time.Now()
 	for _, r := range reminders {
-		next := time.Date(now.Year(), now.Month(), now.Day()+r.EveryWhen, 0, 0, 0, 0, time.UTC)
-		current := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 
-		remainingDays := next.Sub(current).Hours() / 24
 		msg := ""
+		next := now
+		if now.Day() == r.EveryWhen {
+			next = now
+		} else if now.Day() > r.EveryWhen {
+			next = time.Date(now.Year(), now.Month()+1, r.EveryWhen, 0, 0, 0, 0, time.UTC)
+		} else if now.Day() < r.EveryWhen {
+			next = time.Date(now.Year(), now.Month(), r.EveryWhen, 0, 0, 0, 0, time.UTC)
+		} else {
+			fmt.Println("Other 1")
+			continue
+		}
 
-		if int(remainingDays) == current.Day() {
-			msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&current))
-		} else if int(remainingDays) <= lessThanDays {
+		remainingDays := int(next.Sub(now).Hours() / 24)
+		if int(remainingDays) == 0 {
+			msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
+		} else if remainingDays < lessThanDays {
 			if isWeekend(&next) {
 				msg = fmt.Sprintf("'%s' in less than %d days (WEEKEND) (%s)", r.Name, int(remainingDays), formatDate(&next))
 			} else {
 				msg = fmt.Sprintf("'%s' in less than %d days (%s)", r.Name, int(remainingDays), formatDate(&next))
 			}
-		} else if (current.Day() > int(remainingDays)) && ((current.Day() - int(remainingDays)) <= minimumDaysAgo) {
-			msg = r.String() + " days ago"
 		} else {
 			continue
 		}
