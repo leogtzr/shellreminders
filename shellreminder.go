@@ -97,9 +97,9 @@ func (r Reminder) String() string {
 	out.WriteString("'")
 	out.WriteString(r.Name)
 	out.WriteString("'")
-	out.WriteString(" every ")
+	out.WriteString(" day ")
 	out.WriteString(fmt.Sprintf("%d", r.EveryWhen))
-	out.WriteString(" days. ")
+	out.WriteString(" of each month ")
 
 	return out.String()
 }
