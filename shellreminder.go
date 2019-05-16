@@ -155,7 +155,6 @@ func main() {
 		} else if now.Day() < r.EveryWhen {
 			next = time.Date(now.Year(), now.Month(), r.EveryWhen, 0, 0, 0, 0, time.UTC)
 		} else {
-			fmt.Println("Other 1")
 			continue
 		}
 
