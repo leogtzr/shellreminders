@@ -124,7 +124,7 @@ func main() {
 
 	remindersDir := path.Join(os.Getenv("HOME"), ShellReminderMainDirectory)
 	if !existsFileOrDirectory(remindersDir) {
-		fmt.Fprintf(os.Stderr, "%s does not exists\n", os.Getenv("HOME")+ShellReminderMainDirectory)
+		fmt.Fprintf(os.Stderr, "%s does not exists\n", remindersDir)
 		os.Exit(1)
 	}
 
