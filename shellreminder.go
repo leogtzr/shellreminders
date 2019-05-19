@@ -20,19 +20,12 @@ type Reminder struct {
 }
 
 const (
-
-	// ShellReminderMainDirectory ...
-	ShellReminderMainDirectory = ".shellreminder"
-
-	minNumberOfRecordsInFile = 2
-
-	shellPresenterCommand = "toilet"
-
-	minimumDaysAgo = 2
-
-	lessThanDays = 7
-
-	recordFileSeparator = ";"
+	shellReminderMainDirectory = ".shellreminder"
+	minNumberOfRecordsInFile   = 2
+	shellPresenterCommand      = "toilet"
+	minimumDaysAgo             = 2
+	lessThanDays               = 7
+	recordFileSeparator        = ";"
 )
 
 func existsFileOrDirectory(path string) bool {
@@ -124,7 +117,7 @@ func sortRemindersByDay(reminders *[]Reminder) {
 
 func main() {
 
-	remindersDir := path.Join(os.Getenv("HOME"), ShellReminderMainDirectory)
+	remindersDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory)
 	if !existsFileOrDirectory(remindersDir) {
 		fmt.Fprintf(os.Stderr, "%s does not exists\n", remindersDir)
 		os.Exit(1)
@@ -147,8 +140,6 @@ func main() {
 
 	now := time.Now()
 	for _, r := range reminders {
-
-		fmt.Println(r.String())
 
 		msg := ""
 		next := now
