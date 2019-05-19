@@ -31,6 +31,8 @@ const (
 	minimumDaysAgo = 2
 
 	lessThanDays = 7
+
+	recordFileSeparator = ";"
 )
 
 func existsFileOrDirectory(path string) bool {
@@ -39,7 +41,7 @@ func existsFileOrDirectory(path string) bool {
 }
 
 func extractReminderFromText(text string) (Reminder, error) {
-	if !strings.Contains(text, ";") {
+	if !strings.Contains(text, recordFileSeparator) {
 		return Reminder{}, fmt.Errorf("[%s] with wrong format", text)
 	}
 	records := strings.Split(strings.TrimSpace(text), ";")
@@ -99,7 +101,7 @@ func (r Reminder) String() string {
 	out.WriteString("'")
 	out.WriteString(" day ")
 	out.WriteString(fmt.Sprintf("%d", r.EveryWhen))
-	out.WriteString(" of each month ")
+	out.WriteString(" of each month")
 
 	return out.String()
 }
@@ -145,6 +147,8 @@ func main() {
 
 	now := time.Now()
 	for _, r := range reminders {
+
+		fmt.Println(r.String())
 
 		msg := ""
 		next := now

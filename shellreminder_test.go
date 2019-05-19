@@ -55,3 +55,12 @@ func TestReminderRecordParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestReminderString(t *testing.T) {
+	// 'Santander Platino' day 28 of each month
+	r := Reminder{Name: "Santander Platino", EveryWhen: 28}
+	expectedReminderToStringValue := "'Santander Platino' day 28 of each month"
+	if expectedReminderToStringValue != r.String() {
+		t.Fatalf("got=[%q] as string, expected=[%q]", r.String(), expectedReminderToStringValue)
+	}
+}
