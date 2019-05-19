@@ -64,3 +64,64 @@ func TestReminderString(t *testing.T) {
 		t.Fatalf("got=[%q] as string, expected=[%q]", r.String(), expectedReminderToStringValue)
 	}
 }
+
+func TestShouldIgnoreEmptyLine(t *testing.T) {
+	line := ""
+	if !shouldIgnoreLineInFile(line) {
+		t.Errorf("line is empty, it should be ignored.")
+	}
+	line = "# This is a comment"
+	if !shouldIgnoreLineInFile(line) {
+		t.Errorf("line is a comment, it should be ignored.")
+	}
+}
+
+func TestExistsFileOrDirectory(t *testing.T) {
+	if !existsFileOrDirectory("/dev/null") {
+		t.Errorf("file should exist")
+	}
+}
+
+func TestIsWeekend(t *testing.T) {
+	// 05/19/2018 is Sunday
+	d := time.Date(2018, time.May, 19, 0, 0, 0, 0, time.UTC)
+	if !isWeekend(&d) {
+		t.Errorf("Date should be identified as Weekend.")
+	}
+}
+
+func TestFormatDate(t *testing.T) {
+	d := time.Date(2018, time.May, 19, 0, 0, 0, 0, time.UTC)
+	expectedFormattedDateResult := "2018/05/19"
+	result := formatDate(&d)
+	if expectedFormattedDateResult != result {
+		t.Errorf("got [%q], expected [%q]", result, expectedFormattedDateResult)
+	}
+}
+
+func TestSortRemindersByDay(t *testing.T) {
+	reminders := []Reminder{
+		Reminder{
+			Name:      "A",
+			EveryWhen: 4,
+		},
+		Reminder{
+			Name:      "B",
+			EveryWhen: 2,
+		},
+		Reminder{
+			Name:      "C",
+			EveryWhen: 9,
+		},
+	}
+
+	sortRemindersByDay(&reminders)
+
+	for i := 0; i < len(reminders)-1; i++ {
+		if reminders[i].EveryWhen < reminders[i+1].EveryWhen {
+			t.Errorf("%d should come first than %d (%s) and (%s)",
+				reminders[i].EveryWhen, reminders[i+1].EveryWhen, reminders[i], reminders[i+1])
+		}
+	}
+
+}

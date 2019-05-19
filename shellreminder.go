@@ -111,7 +111,7 @@ func isWeekend(d *time.Time) bool {
 }
 
 func formatDate(t *time.Time) string {
-	return fmt.Sprintf("%d/%d/%d", t.Year(), t.Month(), t.Day())
+	return fmt.Sprintf("%d/%02d/%02d", t.Year(), t.Month(), t.Day())
 }
 
 func sortRemindersByDay(reminders *[]Reminder) {
