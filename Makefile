@@ -8,3 +8,4 @@ install:
 
 clean:
 	go clean
+

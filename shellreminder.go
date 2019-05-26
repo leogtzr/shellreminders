@@ -29,6 +29,8 @@ const (
 	recordFileSeparator        = ";"
 )
 
+var cmdArgs = [6]string{"-f", "smblock", "-w", "900", "-F", "border"}
+
 func existsFileOrDirectory(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
@@ -135,43 +137,55 @@ func main() {
 		panic(err)
 	}
 
-	cmdArgs := []string{"-f", "term", "-F", "border"}
-
 	sortRemindersByDay(&reminders)
 
 	now := time.Now()
 	for _, r := range reminders {
 
 		msg := ""
-		next := now
-		if now.Day() == r.EveryWhen {
-			next = now
-		} else if now.Day() > r.EveryWhen {
-			next = time.Date(now.Year(), now.Month()+1, r.EveryWhen, 0, 0, 0, 0, time.UTC)
-		} else if now.Day() < r.EveryWhen {
-			next = time.Date(now.Year(), now.Month(), r.EveryWhen, 0, 0, 0, 0, time.UTC)
-		} else {
-			continue
-		}
+		next := nextReminderRecurrentDate(now, r.EveryWhen)
+		msg = createMessage(next, now, r)
 
-		remainingDays := int(math.Ceil(next.Sub(now).Hours() / 24.0))
-		if remainingDays == 0 {
-			msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
-		} else if remainingDays < lessThanDays {
-			if isWeekend(&next) {
-				msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
-			} else {
-				msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
-			}
-		} else {
-			continue
-		}
-
-		if cmdOut, err := exec.Command(shellPresenterCommand, append(cmdArgs, msg)...).Output(); err != nil {
-			fmt.Println(msg)
-		} else {
-			fmt.Print(string(cmdOut))
+		if len(msg) != 0 {
+			fmt.Println(createOutputText(cmdArgs[:], msg))
 		}
 	}
 
+}
+
+func createMessage(next, now time.Time, r Reminder) string {
+	msg := ""
+	remainingDays := int(math.Ceil(next.Sub(now).Hours() / 24.0))
+	if remainingDays == 0 {
+		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
+	} else if remainingDays < lessThanDays {
+		if isWeekend(&next) {
+			msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
+		} else {
+			msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
+		}
+	}
+
+	return msg
+}
+
+func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
+	next := currentDate
+	if currentDate.Day() == everyWhen {
+		next = currentDate
+	} else if currentDate.Day() > everyWhen {
+		next = time.Date(currentDate.Year(), currentDate.Month()+1, everyWhen, 0, 0, 0, 0, time.UTC)
+	} else if currentDate.Day() < everyWhen {
+		next = time.Date(currentDate.Year(), currentDate.Month(), everyWhen, 0, 0, 0, 0, time.UTC)
+	}
+	return next
+}
+
+func createOutputText(cmdArgs []string, msg string) string {
+	cmd := exec.Command(shellPresenterCommand, append(cmdArgs[:], msg)...)
+	cmdOut, err := cmd.Output()
+	if err != nil {
+		return msg
+	}
+	return string(cmdOut)
 }

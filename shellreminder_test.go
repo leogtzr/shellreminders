@@ -10,7 +10,13 @@ func TestReminderFileParsing(t *testing.T) {
 	reminderFileContent := `Santander Platino;18
 Promotions;13;counter
 	`
-	err := ioutil.WriteFile("/tmp/rmnd.txt", []byte(reminderFileContent), 0644)
+
+	_, err := parseRemindersFromFile("does_not_exist")
+	if err == nil {
+		t.Error("File not found, it should have failed.")
+	}
+
+	err = ioutil.WriteFile("/tmp/rmnd.txt", []byte(reminderFileContent), 0644)
 	if err != nil {
 		t.Fatal("Error generating test reminder file")
 	}
@@ -33,6 +39,17 @@ func generateBaseDateTime() time.Time {
 }
 
 func TestReminderRecordParsing(t *testing.T) {
+
+	_, err := extractReminderFromText("some record")
+	if err == nil {
+		t.Errorf("It should have failed while parsing ... ")
+	}
+
+	_, err = extractReminderFromText("record1;")
+	if err == nil {
+		t.Errorf("It should have failed while parsing due to not enough records in input text")
+	}
+
 	tests := []struct {
 		input        string
 		expectedDays int
@@ -124,4 +141,37 @@ func TestSortRemindersByDay(t *testing.T) {
 		}
 	}
 
+}
+
+func TestCreateOutputText(t *testing.T) {
+	cmdArgs := [7]string{"-f", "smblock", "-w", "900", "-F", "border", "-randomOption"}
+	msg := "'Santander Platino' in 2 days (2019/05/28 Tuesday)"
+	expectedOutput := `'Santander Platino' in 2 days (2019/05/28 Tuesday)`
+
+	output := createOutputText(cmdArgs[:], msg)
+	if output != expectedOutput {
+		t.Errorf("got=[%s], expected=[%s]", output, expectedOutput)
+	}
+}
+
+func Test_createMessage(t *testing.T) {
+	type args struct {
+		next time.Time
+		now  time.Time
+		r    Reminder
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := createMessage(tt.args.next, tt.args.now, tt.args.r); got != tt.want {
+				t.Errorf("createMessage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
