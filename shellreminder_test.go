@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -222,4 +223,20 @@ func TestCreateMessage(t *testing.T) {
 	if msg != expectedMsg {
 		t.Errorf("got=[%s], want=[%s]", msg, expectedMsg)
 	}
+}
+
+func TestGetRemindersFile(t *testing.T) {
+	homeEnvBackup := os.Getenv("HOME")
+	os.Setenv("HOME", "/tmp")
+	_, err := getRemindersFile()
+	if err == nil {
+		t.Errorf("reminders file should be in home directory")
+	}
+
+	os.Setenv("HOME", homeEnvBackup)
+	_, err = getRemindersFile()
+	if err != nil {
+		t.Errorf("Not able to get reminders file")
+	}
+
 }

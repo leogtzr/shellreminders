@@ -37,8 +37,6 @@ func existsFileOrDirectory(path string) bool {
 	return err == nil
 }
 
-// type errNotEnoughRecordsx struct{ error }
-
 func extractReminderFromText(text string) (Reminder, error) {
 	if !strings.Contains(text, recordFileSeparator) {
 		return Reminder{}, fmt.Errorf("[%s] with wrong format", text)
@@ -117,17 +115,24 @@ func sortRemindersByDay(reminders *[]Reminder) {
 	)
 }
 
-func main() {
-
+func getRemindersFile() (string, error) {
 	remindersDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory)
 	if !existsFileOrDirectory(remindersDir) {
-		fmt.Fprintf(os.Stderr, "%s does not exists\n", remindersDir)
-		os.Exit(1)
+		return "", fmt.Errorf("%s does not exists", remindersDir)
 	}
 
 	remindersFile := path.Join(remindersDir, "reminders")
 	if !existsFileOrDirectory(remindersFile) {
-		fmt.Fprintf(os.Stderr, "%s file does not exists\n", remindersFile)
+		return "", fmt.Errorf("%s file does not exists", remindersFile)
+	}
+	return remindersFile, nil
+}
+
+func main() {
+
+	remindersFile, err := getRemindersFile()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
