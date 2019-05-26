@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -36,28 +37,26 @@ func existsFileOrDirectory(path string) bool {
 	return err == nil
 }
 
+// type errNotEnoughRecordsx struct{ error }
+
 func extractReminderFromText(text string) (Reminder, error) {
 	if !strings.Contains(text, recordFileSeparator) {
 		return Reminder{}, fmt.Errorf("[%s] with wrong format", text)
 	}
 	records := strings.Split(strings.TrimSpace(text), ";")
 
-	if len(records) < minNumberOfRecordsInFile {
-		return Reminder{}, fmt.Errorf("not enough records in row ----> [%s]", text)
-	}
-
 	name := records[0]
 	if len(strings.TrimSpace(name)) == 0 {
-		return Reminder{}, fmt.Errorf("reminder name cannot be empty")
+		return Reminder{}, errors.New("not enough records in row, field1")
 	}
 	when := records[1]
 	if len(strings.TrimSpace(when)) == 0 {
-		return Reminder{}, fmt.Errorf("reminder time cannot be empty")
+		return Reminder{}, errors.New("not enough records in row, field2")
 	}
 
 	w, err := strconv.Atoi(when)
 	if err != nil {
-		return Reminder{}, fmt.Errorf("second record should be numeric")
+		return Reminder{}, errors.New("not enough records in row")
 	}
 
 	return Reminder{Name: name, EveryWhen: w}, nil

@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"strings"
 	"testing"
 	"time"
 )
@@ -45,9 +46,19 @@ func TestReminderRecordParsing(t *testing.T) {
 		t.Errorf("It should have failed while parsing ... ")
 	}
 
+	_, err = extractReminderFromText(";;")
+	if err == nil {
+		t.Errorf("Fields cannot be empty")
+	}
+
 	_, err = extractReminderFromText("record1;")
 	if err == nil {
-		t.Errorf("It should have failed while parsing due to not enough records in input text")
+		t.Errorf("Second field cannot be empty")
+	}
+
+	_, err = extractReminderFromText("fiel1;hola")
+	if err == nil {
+		t.Errorf("Second fields must be numeric")
 	}
 
 	tests := []struct {
@@ -144,34 +155,89 @@ func TestSortRemindersByDay(t *testing.T) {
 }
 
 func TestCreateOutputText(t *testing.T) {
-	cmdArgs := [7]string{"-f", "smblock", "-w", "900", "-F", "border", "-randomOption"}
+	cmdArgs := [2]string{"-f", "term"}
 	msg := "'Santander Platino' in 2 days (2019/05/28 Tuesday)"
 	expectedOutput := `'Santander Platino' in 2 days (2019/05/28 Tuesday)`
 
 	output := createOutputText(cmdArgs[:], msg)
-	if output != expectedOutput {
+	if strings.TrimSuffix(output, "\n") != expectedOutput {
+		t.Errorf("got=[%s], expected=[%s]", output, expectedOutput)
+	}
+
+	cmdArgs = [2]string{"-f", "foundNotFound"}
+	output = createOutputText(cmdArgs[:], msg)
+	if strings.TrimSuffix(output, "\n") != expectedOutput {
 		t.Errorf("got=[%s], expected=[%s]", output, expectedOutput)
 	}
 }
 
-func Test_createMessage(t *testing.T) {
-	type args struct {
-		next time.Time
-		now  time.Time
-		r    Reminder
+func TestNextReminderRecurrentDate(t *testing.T) {
+
+	currentDate := time.Date(2019, 5, 26, 0, 0, 0, 0, time.UTC)
+	everyWhen := 27
+
+	next := nextReminderRecurrentDate(currentDate, everyWhen)
+	if (currentDate.Month() + 1) <= next.Month() {
+		t.Errorf("Date [%q] should be after [%q]", currentDate, next)
 	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
+
+	everyWhen = 25
+	next = nextReminderRecurrentDate(currentDate, everyWhen)
+	if next.Month() <= currentDate.Month() {
+		t.Errorf("Date [%q] should be after [%q]", next, currentDate)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := createMessage(tt.args.next, tt.args.now, tt.args.r); got != tt.want {
-				t.Errorf("createMessage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	everyWhen = 26
+	next = nextReminderRecurrentDate(currentDate, everyWhen)
+	if next.Month() != currentDate.Month() {
+		t.Errorf("Date [%q] should be equal [%q], %d = %d", next, currentDate, next.Month(), currentDate.Month())
+	}
+
+}
+
+/*
+func createMessage(next, now time.Time, r Reminder) string {
+	msg := ""
+	remainingDays := int(math.Ceil(next.Sub(now).Hours() / 24.0))
+	if remainingDays == 0 {
+		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
+	} else if remainingDays < lessThanDays {
+		if isWeekend(&next) {
+			msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
+		} else {
+			msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
+		}
+	}
+
+	return msg
+}
+*/
+
+func TestCreateMessage(t *testing.T) {
+	now := time.Date(2019, 5, 26, 0, 0, 0, 0, time.UTC)
+	next := time.Date(2019, 5, 28, 0, 0, 0, 0, time.UTC)
+
+	r := Reminder{Name: "Hello", EveryWhen: 28}
+	msg := createMessage(next, now, r)
+
+	expectedMsg := "'Hello' in 2 days (2019/05/28 Tuesday)"
+	if msg != expectedMsg {
+		t.Errorf("got=[%s], want=[%s]", msg, expectedMsg)
+	}
+
+	next = time.Date(2019, 5, 26, 0, 0, 0, 0, time.UTC)
+	expectedMsg = "'Hello' TODAY! (2019/05/26 Sunday)"
+	msg = createMessage(next, now, r)
+	if msg != expectedMsg {
+		t.Errorf("got=[%s], want=[%s]", msg, expectedMsg)
+	}
+
+	now = time.Date(2019, 5, 24, 0, 0, 0, 0, time.UTC)
+	next = time.Date(2019, 5, 26, 0, 0, 0, 0, time.UTC)
+
+	expectedMsg = "'Hello' in 2 days (WEEKEND) (2019/05/26 Sunday)"
+	msg = createMessage(next, now, r)
+	if msg != expectedMsg {
+		t.Errorf("got=[%s], want=[%s]", msg, expectedMsg)
 	}
 }
