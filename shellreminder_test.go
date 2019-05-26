@@ -92,7 +92,7 @@ func TestIsWeekend(t *testing.T) {
 
 func TestFormatDate(t *testing.T) {
 	d := time.Date(2018, time.May, 19, 0, 0, 0, 0, time.UTC)
-	expectedFormattedDateResult := "2018/05/19"
+	expectedFormattedDateResult := "2018/05/19 Saturday"
 	result := formatDate(&d)
 	if expectedFormattedDateResult != result {
 		t.Errorf("got [%q], expected [%q]", result, expectedFormattedDateResult)

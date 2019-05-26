@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -104,7 +105,7 @@ func isWeekend(d *time.Time) bool {
 }
 
 func formatDate(t *time.Time) string {
-	return fmt.Sprintf("%d/%02d/%02d", t.Year(), t.Month(), t.Day())
+	return fmt.Sprintf("%d/%02d/%02d %s", t.Year(), t.Month(), t.Day(), t.Weekday())
 }
 
 func sortRemindersByDay(reminders *[]Reminder) {
@@ -153,14 +154,14 @@ func main() {
 			continue
 		}
 
-		remainingDays := int(next.Sub(now).Hours() / 24)
-		if int(remainingDays) == 0 {
+		remainingDays := int(math.Ceil(next.Sub(now).Hours() / 24.0))
+		if remainingDays == 0 {
 			msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
 		} else if remainingDays < lessThanDays {
 			if isWeekend(&next) {
-				msg = fmt.Sprintf("'%s' in less than %d days (WEEKEND) (%s)", r.Name, int(remainingDays), formatDate(&next))
+				msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
 			} else {
-				msg = fmt.Sprintf("'%s' in less than %d days (%s)", r.Name, remainingDays + 1, formatDate(&next))
+				msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
 			}
 		} else {
 			continue
