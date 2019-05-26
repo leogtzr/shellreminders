@@ -160,7 +160,7 @@ func main() {
 			if isWeekend(&next) {
 				msg = fmt.Sprintf("'%s' in less than %d days (WEEKEND) (%s)", r.Name, int(remainingDays), formatDate(&next))
 			} else {
-				msg = fmt.Sprintf("'%s' in less than %d days (%s)", r.Name, int(remainingDays), formatDate(&next))
+				msg = fmt.Sprintf("'%s' in less than %d days (%s)", r.Name, remainingDays + 1, formatDate(&next))
 			}
 		} else {
 			continue
