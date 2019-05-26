@@ -195,24 +195,6 @@ func TestNextReminderRecurrentDate(t *testing.T) {
 
 }
 
-/*
-func createMessage(next, now time.Time, r Reminder) string {
-	msg := ""
-	remainingDays := int(math.Ceil(next.Sub(now).Hours() / 24.0))
-	if remainingDays == 0 {
-		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
-	} else if remainingDays < lessThanDays {
-		if isWeekend(&next) {
-			msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
-		} else {
-			msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
-		}
-	}
-
-	return msg
-}
-*/
-
 func TestCreateMessage(t *testing.T) {
 	now := time.Date(2019, 5, 26, 0, 0, 0, 0, time.UTC)
 	next := time.Date(2019, 5, 28, 0, 0, 0, 0, time.UTC)
