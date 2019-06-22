@@ -158,8 +158,7 @@ func main() {
 
 func createMessage(next, now time.Time, r Reminder) string {
 	msg := ""
-	//remainingDays := int(math.Ceil(next.Sub(now).Hours()/24.0)) + 1
-	remainingDays := int(next.Sub(now).Hours() / 24)
+	remainingDays := daysBetween(next, now)
 	if remainingDays == 0 {
 		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
 	} else if remainingDays < lessThanDays {
@@ -171,6 +170,21 @@ func createMessage(next, now time.Time, r Reminder) string {
 	}
 
 	return msg
+}
+
+func daysBetween(a, b time.Time) int {
+	if a.After(b) {
+		a, b = b, a
+	}
+
+	days := -a.YearDay()
+	for year := a.Year(); year < b.Year(); year++ {
+		fmt.Println(year)
+		days += time.Date(year, time.December, 31, 0, 0, 0, 0, time.UTC).YearDay()
+	}
+	days += b.YearDay()
+
+	return days
 }
 
 func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
