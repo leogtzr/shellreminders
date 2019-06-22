@@ -215,6 +215,13 @@ func TestCreateMessage(t *testing.T) {
 		t.Errorf("got=[%s], want=[%s]", msg, expectedMsg)
 	}
 
+	next = time.Date(2019, 5, 27, 0, 0, 0, 0, time.UTC)
+	expectedMsg = "'Hello' in 1 days (2019/05/27 Monday)"
+	msg = createMessage(next, now, r)
+	if msg != expectedMsg {
+		t.Errorf("got=[%s], want=[%s]", msg, expectedMsg)
+	}
+
 	now = time.Date(2019, 5, 24, 0, 0, 0, 0, time.UTC)
 	next = time.Date(2019, 5, 26, 0, 0, 0, 0, time.UTC)
 

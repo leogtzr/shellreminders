@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -26,7 +25,7 @@ const (
 	minNumberOfRecordsInFile   = 2
 	shellPresenterCommand      = "toilet"
 	minimumDaysAgo             = 2
-	lessThanDays               = 7
+	lessThanDays               = 8
 	recordFileSeparator        = ";"
 )
 
@@ -159,7 +158,8 @@ func main() {
 
 func createMessage(next, now time.Time, r Reminder) string {
 	msg := ""
-	remainingDays := int(math.Ceil(next.Sub(now).Hours() / 24.0))
+	//remainingDays := int(math.Ceil(next.Sub(now).Hours()/24.0)) + 1
+	remainingDays := int(next.Sub(now).Hours() / 24)
 	if remainingDays == 0 {
 		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
 	} else if remainingDays < lessThanDays {
