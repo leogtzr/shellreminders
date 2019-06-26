@@ -163,9 +163,17 @@ func createMessage(next, now time.Time, r Reminder) string {
 		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
 	} else if remainingDays < lessThanDays {
 		if isWeekend(&next) {
-			msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
+			if remainingDays == 1 {
+				msg = fmt.Sprintf("'%s' in %d day (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
+			} else {
+				msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
+			}
 		} else {
-			msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
+			if remainingDays == 1 {
+				msg = fmt.Sprintf("'%s' in %d day (%s)", r.Name, remainingDays, formatDate(&next))
+			} else {
+				msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
+			}
 		}
 	}
 
