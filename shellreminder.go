@@ -173,18 +173,21 @@ func createMessage(next, now time.Time, r Reminder) string {
 }
 
 func daysBetween(a, b time.Time) int {
-	if a.After(b) {
-		a, b = b, a
-	}
 
-	days := -a.YearDay()
-	for year := a.Year(); year < b.Year(); year++ {
-		fmt.Println(year)
-		days += time.Date(year, time.December, 31, 0, 0, 0, 0, time.UTC).YearDay()
-	}
-	days += b.YearDay()
+	// fmt.Println("a", a.YearDay())
+	// fmt.Println("b", b.YearDay())
 
-	return days
+	// if a.After(b) {
+	// 	a, b = b, a
+	// }
+
+	// days := -a.YearDay()
+	// for year := a.Year(); year < b.Year(); year++ {
+	// 	days += time.Date(year, time.December, 31, 0, 0, 0, 0, time.UTC).YearDay()
+	// }
+	// days += b.YearDay()
+	// return days
+	return a.YearDay() - b.YearDay()
 }
 
 func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
