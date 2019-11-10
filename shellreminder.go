@@ -206,7 +206,7 @@ func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
 		next = time.Date(currentDate.Year(), currentDate.Month()+1, everyWhen, 0, 0, 0, 0, time.UTC)
 	} else if currentDate.Day() < everyWhen {
 		next = time.Date(currentDate.Year(), currentDate.Month(), everyWhen, 0, 0, 0, 0, time.UTC)
-	}
+	} 
 	return next
 }
 
