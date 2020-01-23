@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/muesli/termenv"
 )
 
 // Reminder ...
@@ -24,9 +26,9 @@ const (
 	shellReminderMainDirectory = ".shellreminder"
 	minNumberOfRecordsInFile   = 2
 	shellPresenterCommand      = "toilet"
-	minimumDaysAgo             = 2
 	lessThanDays               = 8
 	recordFileSeparator        = ";"
+	warningRemainingDays       = 2
 )
 
 var cmdArgs = [6]string{"-f", "smblock", "-w", "900", "-F", "border"}
@@ -140,6 +142,8 @@ func main() {
 		panic(err)
 	}
 
+	p := termenv.ColorProfile()
+
 	sortRemindersByDay(&reminders)
 
 	now := time.Now()
@@ -147,16 +151,16 @@ func main() {
 
 		msg := ""
 		next := nextReminderRecurrentDate(now, r.EveryWhen)
-		msg = createMessage(next, now, r)
+		msg, remainingDays := createMessage(next, now, r)
 
 		if len(msg) != 0 {
-			fmt.Println(createOutputText(cmdArgs[:], msg))
+			fmt.Println(createOutputText(cmdArgs[:], msg, remainingDays, &p))
 		}
 	}
 
 }
 
-func createMessage(next, now time.Time, r Reminder) string {
+func createMessage(next, now time.Time, r Reminder) (string, int) {
 	msg := ""
 	remainingDays := daysBetween(next, now)
 	if remainingDays == 0 {
@@ -177,7 +181,7 @@ func createMessage(next, now time.Time, r Reminder) string {
 		}
 	}
 
-	return msg
+	return msg, remainingDays
 }
 
 func daysBetween(a, b time.Time) int {
@@ -206,15 +210,24 @@ func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
 		next = time.Date(currentDate.Year(), currentDate.Month()+1, everyWhen, 0, 0, 0, 0, time.UTC)
 	} else if currentDate.Day() < everyWhen {
 		next = time.Date(currentDate.Year(), currentDate.Month(), everyWhen, 0, 0, 0, 0, time.UTC)
-	} 
+	}
 	return next
 }
 
-func createOutputText(cmdArgs []string, msg string) string {
+func createOutputText(cmdArgs []string, msg string, remainingDays int, p *termenv.Profile) string {
 	cmd := exec.Command(shellPresenterCommand, append(cmdArgs[:], msg)...)
 	cmdOut, err := cmd.Output()
 	if err != nil {
 		return msg
 	}
-	return string(cmdOut)
+	return withColor(string(cmdOut), remainingDays, p)
+}
+
+func withColor(msg string, remainingDays int, p *termenv.Profile) string {
+	if (remainingDays <= warningRemainingDays) && (remainingDays > 0) {
+		return termenv.String(msg).Foreground(p.Color("#DBAB79")).String()
+	} else if remainingDays == 0 {
+		return termenv.String(msg).Foreground(p.Color("#E88388")).String()
+	}
+	return termenv.String(msg).Foreground(p.Color("#A8CC8C")).String()
 }
