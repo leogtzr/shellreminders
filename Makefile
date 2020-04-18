@@ -8,6 +8,7 @@ install:
 
 clean:
 	go clean
+	rm --force cp.out
 
 check:
 	go test

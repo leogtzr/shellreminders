@@ -16,20 +16,6 @@ import (
 	"github.com/muesli/termenv"
 )
 
-// Reminder ...
-type Reminder struct {
-	Name      string
-	EveryWhen int
-}
-
-// Configuration ...
-type Configuration struct {
-	termProfile        termenv.Profile
-	colorConfiguration map[string]string
-}
-
-var cmdArgs = [6]string{"-f", "smblock", "-w", "900", "-F", "border"}
-
 func existsFileOrDirectory(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
