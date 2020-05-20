@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/muesli/termenv"
@@ -57,10 +59,17 @@ func main() {
 		}
 
 		if r.Notify && remainingDays == 0 {
-			// send sms ...
-			err = notify(msg, &r, envConfig)
-			if err != nil {
-				log.Fatal(err)
+			hash := buildHash(r.Name)
+			notifHashFilePath := filepath.Join(notifsDir, hash)
+			if !exists(notifHashFilePath) {
+				err = notify(msg, &r, envConfig)
+				if err != nil {
+					log.Fatal(err)
+				}
+				err = ioutil.WriteFile(notifHashFilePath, []byte(r.Name), 0644)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
