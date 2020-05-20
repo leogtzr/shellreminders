@@ -2,6 +2,7 @@ package main
 
 const (
 	shellReminderMainDirectory = ".shellreminder"
+	notificationsDirectory     = "notifs"
 	minNumberOfRecordsInFile   = 2
 	shellPresenterCommand      = "toilet"
 	lessThanDays               = 8

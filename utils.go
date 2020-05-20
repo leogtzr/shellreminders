@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -225,4 +227,31 @@ func notify(msg string, r *Reminder, envConfig *viper.Viper) error {
 	}
 	return nil
 
+}
+
+func buildHash(reminderName string) string {
+	today := time.Now()
+	text := fmt.Sprintf("%s%d%s%d", reminderName, today.Day(), today.Month(), today.Year())
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
+}
+
+func dirExists(dirPath string) bool {
+	if _, err := os.Stat(dirPath); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+		return false
+	}
+	return true
+}
+
+func createDirectory(dirPath string) error {
+	if !dirExists(dirPath) {
+		err := os.Mkdir(dirPath, 0755)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

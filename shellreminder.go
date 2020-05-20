@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"time"
 
 	"github.com/muesli/termenv"
@@ -11,10 +12,6 @@ import (
 
 func main() {
 
-	/*
-		api_key=37c08302
-		api_secret=JIaVw2MowOPfQkX2
-	*/
 	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
 		"api_key":    os.Getenv("NEXMO_API_KEY"),
 		"api_secret": os.Getenv("NEXMO_API_SECRET"),
@@ -25,6 +22,12 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
+	}
+
+	notifsDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory, notificationsDirectory)
+	err = createDirectory(notifsDir)
+	if err != nil {
+		panic(err)
 	}
 
 	reminders, err := parseRemindersFromFile(remindersFile)
