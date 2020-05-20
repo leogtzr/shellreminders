@@ -1,6 +1,24 @@
 package main
 
-import "github.com/spf13/viper"
+import (
+	"bufio"
+	"bytes"
+	"errors"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/exec"
+	"path"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/muesli/termenv"
+	"github.com/nexmo-community/nexmo-go"
+	"github.com/spf13/viper"
+)
 
 func colorForMessages() map[string]string {
 	return map[string]string{
@@ -8,6 +26,165 @@ func colorForMessages() map[string]string {
 		"yellow": yellowHexColor,
 		"green":  greenHexColor,
 	}
+}
+
+func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
+	next := currentDate
+	if currentDate.Day() == everyWhen {
+		next = currentDate
+	} else if currentDate.Day() > everyWhen {
+		next = time.Date(currentDate.Year(), currentDate.Month()+1, everyWhen, 0, 0, 0, 0, time.UTC)
+	} else if currentDate.Day() < everyWhen {
+		next = time.Date(currentDate.Year(), currentDate.Month(), everyWhen, 0, 0, 0, 0, time.UTC)
+	}
+	return next
+}
+
+func createOutputText(cmdArgs []string, msg string, remainingDays, warningRemainingDays int, config *Configuration) string {
+	cmd := exec.Command(shellPresenterCommand, append(cmdArgs[:], msg)...)
+	cmdOut, err := cmd.Output()
+	if err != nil {
+		return msg
+	}
+	return withColor(string(cmdOut), remainingDays, warningRemainingDays, config)
+}
+
+func withColor(msg string, remainingDays, warningRemainingDays int, config *Configuration) string {
+	if (remainingDays <= warningRemainingDays) && (remainingDays > 0) {
+		return termenv.String(msg).Foreground(config.termProfile.Color(yellowHexColor)).String()
+	} else if remainingDays == 0 {
+		return termenv.String(msg).Foreground(config.termProfile.Color(redHexColor)).String()
+	}
+	return termenv.String(msg).Foreground(config.termProfile.Color(greenHexColor)).String()
+}
+
+func createMessage(next, now time.Time, r Reminder) (string, int) {
+	msg := ""
+	remainingDays := daysBetween(next, now)
+	if remainingDays == 0 {
+		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
+	} else if remainingDays < lessThanDays {
+		if isWeekend(&next) {
+			if remainingDays == 1 {
+				msg = fmt.Sprintf("'%s' in %d day (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
+			} else {
+				msg = fmt.Sprintf("'%s' in %d days (WEEKEND) (%s)", r.Name, remainingDays, formatDate(&next))
+			}
+		} else {
+			if remainingDays == 1 {
+				msg = fmt.Sprintf("'%s' in %d day (%s)", r.Name, remainingDays, formatDate(&next))
+			} else {
+				msg = fmt.Sprintf("'%s' in %d days (%s)", r.Name, remainingDays, formatDate(&next))
+			}
+		}
+	}
+
+	return msg, remainingDays
+}
+
+func daysBetween(a, b time.Time) int {
+	return a.YearDay() - b.YearDay()
+}
+
+func existsFileOrDirectory(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func extractReminderFromText(text string) (Reminder, error) {
+	if !strings.Contains(text, recordFileSeparator) {
+		return Reminder{}, fmt.Errorf("[%s] with wrong format", text)
+	}
+	records := strings.Split(strings.TrimSpace(text), ";")
+
+	name := records[0]
+	if len(strings.TrimSpace(name)) == 0 {
+		return Reminder{}, errors.New("not enough records in row, field1")
+	}
+	when := records[1]
+	if len(strings.TrimSpace(when)) == 0 {
+		return Reminder{}, errors.New("not enough records in row, field2")
+	}
+
+	notify := false
+	if len(records) > minNumberOfRecordsInFile {
+		notify = true
+	}
+
+	w, err := strconv.Atoi(when)
+	if err != nil {
+		return Reminder{}, errors.New("not enough records in row")
+	}
+
+	return Reminder{Name: name, EveryWhen: w, Notify: notify}, nil
+}
+
+func shouldIgnoreLineInFile(line string) bool {
+	return len(line) == 0 || strings.HasPrefix(line, "#")
+}
+
+func parseRemindersFromFile(filePath string) ([]Reminder, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	input := bufio.NewScanner(f)
+	reminders := make([]Reminder, 0)
+
+	for input.Scan() {
+		line := strings.TrimSpace(input.Text())
+		if shouldIgnoreLineInFile(line) {
+			continue
+		}
+		reminder, err := extractReminderFromText(line)
+		if err != nil {
+			return []Reminder{}, err
+		}
+		reminders = append(reminders, reminder)
+	}
+
+	return reminders, nil
+}
+
+func (r Reminder) String() string {
+	var out bytes.Buffer
+	out.WriteString("'")
+	out.WriteString(r.Name)
+	out.WriteString("'")
+	out.WriteString(" day ")
+	out.WriteString(fmt.Sprintf("%d", r.EveryWhen))
+	out.WriteString(" of each month")
+
+	return out.String()
+}
+
+func isWeekend(d *time.Time) bool {
+	return d.Weekday() == time.Saturday || d.Weekday() == time.Sunday
+}
+
+func formatDate(t *time.Time) string {
+	return fmt.Sprintf("%d/%02d/%02d %s", t.Year(), t.Month(), t.Day(), t.Weekday())
+}
+
+func sortRemindersByDay(reminders *[]Reminder) {
+	sort.Slice(*reminders,
+		func(i, j int) bool {
+			return (*reminders)[i].EveryWhen > (*reminders)[j].EveryWhen
+		},
+	)
+}
+
+func getRemindersFile() (string, error) {
+	remindersDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory)
+	if !existsFileOrDirectory(remindersDir) {
+		return "", fmt.Errorf("%s does not exists", remindersDir)
+	}
+
+	remindersFile := path.Join(remindersDir, "reminders")
+	if !existsFileOrDirectory(remindersFile) {
+		return "", fmt.Errorf("%s file does not exists", remindersFile)
+	}
+	return remindersFile, nil
 }
 
 func readConfig(filename, configPath string, defaults map[string]interface{}) (*viper.Viper, error) {
@@ -24,4 +201,28 @@ func readConfig(filename, configPath string, defaults map[string]interface{}) (*
 
 func sendEmail(cfg *viper.Viper) error {
 	return nil
+}
+
+func notify(msg string, r *Reminder, envConfig *viper.Viper) error {
+
+	auth := nexmo.NewAuthSet()
+	auth.SetAPISecret(envConfig.GetString("api_key"), envConfig.GetString("api_secret"))
+
+	// Init Nexmo
+	client := nexmo.NewClient(http.DefaultClient, auth)
+
+	// SMS
+	smsContent := nexmo.SendSMSRequest{
+		From: "447700900004",
+		To:   envConfig.GetString("to_phone"),
+		Text: msg,
+	}
+
+	_, _, err := client.SMS.SendSMS(smsContent)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nil
+
 }
