@@ -13,20 +13,22 @@ import (
 
 func TestReminderFileParsing(t *testing.T) {
 	reminderFileContent := `Santander Platino;18
-Promotions;13;counter
+Promotions;13;true
 	`
+
+	const remindersTmpFilePath = "/tmp/rmnd.txt"
 
 	_, err := parseRemindersFromFile("does_not_exist")
 	if err == nil {
 		t.Error("File not found, it should have failed.")
 	}
 
-	err = ioutil.WriteFile("/tmp/rmnd.txt", []byte(reminderFileContent), 0644)
+	err = ioutil.WriteFile(remindersTmpFilePath, []byte(reminderFileContent), 0644)
 	if err != nil {
 		t.Fatal("Error generating test reminder file")
 	}
 
-	reminders, err := parseRemindersFromFile("/tmp/rmnd.txt")
+	reminders, err := parseRemindersFromFile(remindersTmpFilePath)
 	if err != nil {
 		t.Fatal("error parsing reminder file")
 	}
@@ -34,6 +36,11 @@ Promotions;13;counter
 	expectedRemindersCount := 2
 	if len(reminders) != expectedRemindersCount {
 		t.Fatalf("error parsing reminder file, it should have had %d records, got=%d", expectedRemindersCount, len(reminders))
+	}
+
+	err = os.RemoveAll(remindersTmpFilePath)
+	if err != nil {
+		t.Errorf("unexpedted error: [%s]", err)
 	}
 }
 
@@ -69,9 +76,10 @@ func TestReminderRecordParsing(t *testing.T) {
 		input        string
 		expectedDays int
 		expectedName string
+		notify       bool
 	}{
-		{`Santander Platino;18`, 18, "Santander Platino"},
-		{`Promotions;13;counter`, 13, "Promotions"},
+		{`Santander Platino;18`, 18, "Santander Platino", false},
+		{`Promotions;13;true`, 13, "Promotions", true},
 	}
 
 	for _, tt := range tests {
@@ -84,6 +92,9 @@ func TestReminderRecordParsing(t *testing.T) {
 		}
 		if reminder.EveryWhen != tt.expectedDays {
 			t.Fatalf("got=%d as days, expected=%d", reminder.EveryWhen, tt.expectedDays)
+		}
+		if reminder.Notify != tt.notify {
+			t.Fatalf("got=%t as notify, expected=%t", reminder.Notify, tt.notify)
 		}
 	}
 }

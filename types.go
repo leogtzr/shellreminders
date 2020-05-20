@@ -6,6 +6,7 @@ import "github.com/muesli/termenv"
 type Reminder struct {
 	Name      string
 	EveryWhen int
+	Notify    bool
 }
 
 // Configuration ...

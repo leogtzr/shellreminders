@@ -36,12 +36,17 @@ func extractReminderFromText(text string) (Reminder, error) {
 		return Reminder{}, errors.New("not enough records in row, field2")
 	}
 
+	notify := false
+	if len(records) > minNumberOfRecordsInFile {
+		notify = true
+	}
+
 	w, err := strconv.Atoi(when)
 	if err != nil {
 		return Reminder{}, errors.New("not enough records in row")
 	}
 
-	return Reminder{Name: name, EveryWhen: w}, nil
+	return Reminder{Name: name, EveryWhen: w, Notify: notify}, nil
 }
 
 func shouldIgnoreLineInFile(line string) bool {
