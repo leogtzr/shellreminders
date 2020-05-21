@@ -202,10 +202,6 @@ func readConfig(filename, configPath string, defaults map[string]interface{}) (*
 	return v, err
 }
 
-func sendEmail(cfg *viper.Viper) error {
-	return nil
-}
-
 func notifySMS(msg string, r *Reminder, envConfig *viper.Viper) error {
 	auth := nexmo.NewAuthSet()
 	auth.SetAPISecret(envConfig.GetString("api_key"), envConfig.GetString("api_secret"))
