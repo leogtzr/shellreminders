@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,6 +18,8 @@ import (
 
 	"github.com/muesli/termenv"
 	"github.com/nexmo-community/nexmo-go"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/spf13/viper"
 )
 
@@ -205,15 +206,12 @@ func sendEmail(cfg *viper.Viper) error {
 	return nil
 }
 
-func notify(msg string, r *Reminder, envConfig *viper.Viper) error {
-
+func notifySMS(msg string, r *Reminder, envConfig *viper.Viper) error {
 	auth := nexmo.NewAuthSet()
 	auth.SetAPISecret(envConfig.GetString("api_key"), envConfig.GetString("api_secret"))
 
-	// Init Nexmo
 	client := nexmo.NewClient(http.DefaultClient, auth)
 
-	// SMS
 	smsContent := nexmo.SendSMSRequest{
 		From: "447700900004",
 		To:   envConfig.GetString("to_phone"),
@@ -221,12 +219,18 @@ func notify(msg string, r *Reminder, envConfig *viper.Viper) error {
 	}
 
 	_, _, err := client.SMS.SendSMS(smsContent)
+	return err
+}
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	return nil
+func notifyEmail(msg string, r *Reminder, envConfig *viper.Viper) error {
+	from := mail.NewEmail("Leonidas", "leonidas@root.com")
+	subject := fmt.Sprintf("REMINDER -> %s", msg)
+	to := mail.NewEmail("Leo Gtz", envConfig.GetString("email_to"))
 
+	message := mail.NewSingleEmail(from, subject, to, msg, msg)
+	client := sendgrid.NewSendClient(envConfig.GetString("sendgrid_api_key"))
+	_, err := client.Send(message)
+	return err
 }
 
 func buildHash(reminderName string) string {

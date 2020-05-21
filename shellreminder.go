@@ -15,9 +15,11 @@ import (
 func main() {
 
 	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
-		"api_key":    os.Getenv("NEXMO_API_KEY"),
-		"api_secret": os.Getenv("NEXMO_API_SECRET"),
-		"to_phone":   os.Getenv("NOTIFY_PHONE"),
+		"api_key":          os.Getenv("NEXMO_API_KEY"),
+		"api_secret":       os.Getenv("NEXMO_API_SECRET"),
+		"to_phone":         os.Getenv("NOTIFY_PHONE"),
+		"sendgrid_api_key": os.Getenv("SENDGRID_API_KEY"),
+		"email_to":         "",
 	})
 
 	remindersFile, err := getRemindersFile()
@@ -62,9 +64,13 @@ func main() {
 			hash := buildHash(r.Name)
 			notifHashFilePath := filepath.Join(notifsDir, hash)
 			if !exists(notifHashFilePath) {
-				err = notify(msg, &r, envConfig)
+				err = notifySMS(msg, &r, envConfig)
 				if err != nil {
 					log.Fatal(err)
+				}
+				err = notifyEmail(msg, &r, envConfig)
+				if err != nil {
+					panic(err)
 				}
 				err = ioutil.WriteFile(notifHashFilePath, []byte(r.Name), 0644)
 				if err != nil {
@@ -73,5 +79,4 @@ func main() {
 			}
 		}
 	}
-
 }
