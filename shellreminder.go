@@ -70,7 +70,7 @@ func main() {
 				}
 				err = notifyEmail(msg, &r, envConfig)
 				if err != nil {
-					panic(err)
+					fmt.Println(err)
 				}
 				err = ioutil.WriteFile(notifHashFilePath, []byte(r.Name), 0644)
 				if err != nil {
