@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/muesli/termenv"
 	"github.com/spf13/viper"
 )
 
@@ -36,13 +35,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 		return err
 	}
 
-	p := termenv.ColorProfile()
-	colors := colorForMessages()
-
-	config := Configuration{
-		colorConfiguration: colors,
-		termProfile:        p,
-	}
+	colorConfig := getColorConfig()
 
 	sortRemindersByDay(&reminders)
 
@@ -54,7 +47,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 		msg, remainingDays := createMessage(next, now, r)
 
 		if len(msg) != 0 {
-			fmt.Println(createOutputText(cmdArgs[:], msg, remainingDays, warningRemainingDays, &config))
+			fmt.Println(createOutputText(cmdArgs[:], msg, remainingDays, warningRemainingDays, &colorConfig))
 		}
 
 		if r.Notify && remainingDays == 0 {

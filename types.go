@@ -10,7 +10,7 @@ type Reminder struct {
 }
 
 // Configuration ...
-type Configuration struct {
+type ColorConfiguration struct {
 	termProfile        termenv.Profile
 	colorConfiguration map[string]string
 }

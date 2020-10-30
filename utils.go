@@ -43,7 +43,8 @@ func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
 	return next
 }
 
-func createOutputText(cmdArgs []string, msg string, remainingDays, warningRemainingDays int, config *Configuration) string {
+func createOutputText(
+	cmdArgs []string, msg string, remainingDays, warningRemainingDays int, config *ColorConfiguration) string {
 	cmd := exec.Command(shellPresenterCommand, append(cmdArgs[:], msg)...)
 	cmdOut, err := cmd.Output()
 	if err != nil {
@@ -52,7 +53,7 @@ func createOutputText(cmdArgs []string, msg string, remainingDays, warningRemain
 	return withColor(string(cmdOut), remainingDays, warningRemainingDays, config)
 }
 
-func withColor(msg string, remainingDays, warningRemainingDays int, config *Configuration) string {
+func withColor(msg string, remainingDays, warningRemainingDays int, config *ColorConfiguration) string {
 	if (remainingDays <= warningRemainingDays) && (remainingDays > 0) {
 		return termenv.String(msg).Foreground(config.termProfile.Color(yellowHexColor)).String()
 	} else if remainingDays == 0 {
@@ -253,4 +254,16 @@ func exists(name string) bool {
 		return false
 	}
 	return true
+}
+
+func getColorConfig() ColorConfiguration {
+	p := termenv.ColorProfile()
+	colors := colorForMessages()
+
+	colorConfig := ColorConfiguration{
+		colorConfiguration: colors,
+		termProfile:        p,
+	}
+
+	return colorConfig
 }

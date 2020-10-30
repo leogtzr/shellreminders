@@ -177,7 +177,7 @@ func TestCreateOutputText(t *testing.T) {
 
 	p := termenv.ColorProfile()
 	colors := colorForMessages()
-	config := Configuration{
+	config := ColorConfiguration{
 		colorConfiguration: colors,
 		termProfile:        p,
 	}
@@ -287,13 +287,13 @@ func Test_withColor(t *testing.T) {
 	type test struct {
 		msg                                 string
 		remainingDays, warningRemainingDays int
-		config                              Configuration
+		config                              ColorConfiguration
 		want                                string
 	}
 
 	p := termenv.ColorProfile()
 	colors := colorForMessages()
-	config := Configuration{
+	config := ColorConfiguration{
 		colorConfiguration: colors,
 		termProfile:        p,
 	}
