@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -42,7 +41,6 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 	now := time.Now()
 	for _, r := range reminders {
 
-		msg := ""
 		next := nextReminderRecurrentDate(now, r.EveryWhen)
 		msg, remainingDays := createMessage(next, now, r)
 
@@ -54,11 +52,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 			hash := buildHash(r.Name)
 			notifHashFilePath := filepath.Join(notifsDir, hash)
 			if !exists(notifHashFilePath) {
-				err = notifySMS(msg, &r, envConfig)
-				if err != nil {
-					log.Fatal(err)
-				}
-				err = notifyEmail(msg, &r, envConfig)
+				err = notify(msg, &r, envConfig)
 				if err != nil {
 					fmt.Println(err)
 				}

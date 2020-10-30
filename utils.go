@@ -267,3 +267,15 @@ func getColorConfig() ColorConfiguration {
 
 	return colorConfig
 }
+
+func notify(msg string, r *Reminder, envConfig *viper.Viper) error {
+	err := notifySMS(msg, r, envConfig)
+	if err != nil {
+		return err
+	}
+	err = notifyEmail(msg, r, envConfig)
+	if err != nil {
+		return err
+	}
+	return nil
+}

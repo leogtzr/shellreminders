@@ -9,7 +9,7 @@ type Reminder struct {
 	Notify    bool
 }
 
-// Configuration ...
+// ColorConfiguration ...
 type ColorConfiguration struct {
 	termProfile        termenv.Profile
 	colorConfiguration map[string]string
