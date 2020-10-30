@@ -32,17 +32,17 @@ func Test_buildHash(t *testing.T) {
 	tests := []test{
 		test{
 			reminderName: "hola",
-			want:         "77a69f8b593ff373140666fe1faddcb7",
+			want:         "a04369b08863c07411df0c19a9396f2a",
 		},
 		test{
 			reminderName: "test1",
-			want:         "0ebec8ca1bbe2cf1922446edbf9eb9ba",
+			want:         "c3fb3ec91f9ed1471864731aa4dc5fa0",
 		},
 	}
 
 	for _, tt := range tests {
 		if got := buildHash(tt.reminderName); got != tt.want {
-			t.Errorf("got=[%s], expected=[%s]", got, tt.want)
+			t.Errorf("got=[%s], expected=[%s] for '%s' reminder name", got, tt.want, tt.reminderName)
 		}
 	}
 }
