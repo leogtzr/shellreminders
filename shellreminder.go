@@ -14,39 +14,26 @@ import (
 )
 
 func run(envConfig *viper.Viper) error {
-	return nil
-}
-
-func main() {
-
-	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
-		"api_key":             os.Getenv("NEXMO_API_KEY"),
-		"api_secret":          os.Getenv("NEXMO_API_SECRET"),
-		"to_phone":            os.Getenv("NOTIFY_PHONE"),
-		"sendgrid_api_key":    os.Getenv("SENDGRID_API_KEY"),
-		"reminders_directory": shellReminderMainDirectory,
-		"email_to":            "",
-	})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
-		os.Exit(1)
-	}
 
 	remindersFile := getRemindersFilePath(path.Join(os.Getenv("HOME"), envConfig.GetString("reminders_directory")))
 	if !existsFileOrDirectory(remindersFile) {
-		fmt.Fprintf(os.Stderr, err.Error())
-		os.Exit(1)
+		return fmt.Errorf(`error: '%s' does not exist
+
+Create the file '%s' with a content such as the following:
+
+Cancel UFCFightPass;29;true
+Pagar Internet;7;true`, remindersFile, remindersFile)
 	}
 
 	notifsDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory, notificationsDirectory)
-	err = createDirectory(notifsDir)
+	err := createDirectory(notifsDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	reminders, err := parseRemindersFromFile(remindersFile)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	p := termenv.ColorProfile()
@@ -84,9 +71,33 @@ func main() {
 				}
 				err = ioutil.WriteFile(notifHashFilePath, []byte(r.Name), 0644)
 				if err != nil {
-					panic(err)
+					return err
 				}
 			}
 		}
 	}
+
+	return nil
+}
+
+func main() {
+
+	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
+		"api_key":             os.Getenv("NEXMO_API_KEY"),
+		"api_secret":          os.Getenv("NEXMO_API_SECRET"),
+		"to_phone":            os.Getenv("NOTIFY_PHONE"),
+		"sendgrid_api_key":    os.Getenv("SENDGRID_API_KEY"),
+		"reminders_directory": shellReminderMainDirectory,
+		"email_to":            "",
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+
+	if err := run(envConfig); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+
 }
