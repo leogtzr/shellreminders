@@ -260,19 +260,27 @@ func TestCreateMessage(t *testing.T) {
 }
 
 func TestGetRemindersFile(t *testing.T) {
-	homeEnvBackup := os.Getenv("HOME")
-	os.Setenv("HOME", "/tmp")
-	_, err := getRemindersFile()
-	if err == nil {
-		t.Errorf("reminders file should be in home directory")
+	type testCase struct {
+		baseDir string
+		want    string
 	}
 
-	os.Setenv("HOME", homeEnvBackup)
-	_, err = getRemindersFile()
-	if err != nil {
-		t.Errorf("Not able to get reminders file")
+	tests := []testCase{
+		testCase{
+			baseDir: "/home/leo",
+			want:    "/home/leo/reminders",
+		},
+		testCase{
+			baseDir: "/tmp",
+			want:    "/tmp/reminders",
+		},
 	}
 
+	for _, tc := range tests {
+		if got := getRemindersFilePath(tc.baseDir); got != tc.want {
+			t.Errorf("got=[%s], want=[%s]", got, tc.want)
+		}
+	}
 }
 
 func Test_withColor(t *testing.T) {

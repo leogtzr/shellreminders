@@ -10,20 +10,30 @@ import (
 	"time"
 
 	"github.com/muesli/termenv"
+	"github.com/spf13/viper"
 )
+
+func run(envConfig *viper.Viper) error {
+	return nil
+}
 
 func main() {
 
 	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
-		"api_key":          os.Getenv("NEXMO_API_KEY"),
-		"api_secret":       os.Getenv("NEXMO_API_SECRET"),
-		"to_phone":         os.Getenv("NOTIFY_PHONE"),
-		"sendgrid_api_key": os.Getenv("SENDGRID_API_KEY"),
-		"email_to":         "",
+		"api_key":             os.Getenv("NEXMO_API_KEY"),
+		"api_secret":          os.Getenv("NEXMO_API_SECRET"),
+		"to_phone":            os.Getenv("NOTIFY_PHONE"),
+		"sendgrid_api_key":    os.Getenv("SENDGRID_API_KEY"),
+		"reminders_directory": shellReminderMainDirectory,
+		"email_to":            "",
 	})
-
-	remindersFile, err := getRemindersFile()
 	if err != nil {
+		fmt.Fprintf(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+
+	remindersFile := getRemindersFilePath(path.Join(os.Getenv("HOME"), envConfig.GetString("reminders_directory")))
+	if !existsFileOrDirectory(remindersFile) {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
 	}

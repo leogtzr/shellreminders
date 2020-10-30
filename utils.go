@@ -177,17 +177,9 @@ func sortRemindersByDay(reminders *[]Reminder) {
 	)
 }
 
-func getRemindersFile() (string, error) {
-	remindersDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory)
-	if !existsFileOrDirectory(remindersDir) {
-		return "", fmt.Errorf("%s does not exists", remindersDir)
-	}
-
-	remindersFile := path.Join(remindersDir, "reminders")
-	if !existsFileOrDirectory(remindersFile) {
-		return "", fmt.Errorf("%s file does not exists", remindersFile)
-	}
-	return remindersFile, nil
+func getRemindersFilePath(remindersDirectory string) string {
+	remindersFile := path.Join(remindersDirectory, "reminders")
+	return remindersFile
 }
 
 func readConfig(filename, configPath string, defaults map[string]interface{}) (*viper.Viper, error) {
