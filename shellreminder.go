@@ -44,7 +44,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 		next := nextReminderRecurrentDate(now, r.EveryWhen)
 		msg, remainingDays := createMessage(next, now, r)
 
-		if len(msg) != 0 {
+		if len(msg) != 0 && remainingDays > 0 {
 			fmt.Println(createOutputText(cmdArgs[:], msg, remainingDays, warningRemainingDays, &colorConfig))
 		}
 
