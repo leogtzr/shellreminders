@@ -47,11 +47,11 @@ Promotions;13;true
 func generateBaseDateTime() time.Time {
 	now := time.Now()
 	then := time.Date(2018, now.Month(), now.Day(), 0 /*the hour */, 0 /* the minutes */, 0, 0, time.UTC)
+
 	return then
 }
 
 func TestReminderRecordParsing(t *testing.T) {
-
 	_, err := extractReminderFromText("some record")
 	if err == nil {
 		t.Errorf("It should have failed while parsing ... ")
@@ -87,12 +87,15 @@ func TestReminderRecordParsing(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error parsing '%s' record", tt.input)
 		}
+
 		if reminder.Name != tt.expectedName {
 			t.Fatalf("got=%s as name, expected=%s", reminder.Name, tt.expectedName)
 		}
+
 		if reminder.EveryWhen != tt.expectedDays {
 			t.Fatalf("got=%d as days, expected=%d", reminder.EveryWhen, tt.expectedDays)
 		}
+
 		if reminder.Notify != tt.notify {
 			t.Fatalf("got=%t as notify, expected=%t", reminder.Notify, tt.notify)
 		}
@@ -144,15 +147,15 @@ func TestFormatDate(t *testing.T) {
 
 func TestSortRemindersByDay(t *testing.T) {
 	reminders := []Reminder{
-		Reminder{
+		{
 			Name:      "A",
 			EveryWhen: 4,
 		},
-		Reminder{
+		{
 			Name:      "B",
 			EveryWhen: 2,
 		},
-		Reminder{
+		{
 			Name:      "C",
 			EveryWhen: 9,
 		},
@@ -266,11 +269,11 @@ func TestGetRemindersFile(t *testing.T) {
 	}
 
 	tests := []testCase{
-		testCase{
+		{
 			baseDir: "/home/leo",
 			want:    "/home/leo/reminders",
 		},
-		testCase{
+		{
 			baseDir: "/tmp",
 			want:    "/tmp/reminders",
 		},

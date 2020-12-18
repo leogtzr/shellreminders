@@ -40,16 +40,19 @@ func nextReminderRecurrentDate(currentDate time.Time, everyWhen int) time.Time {
 	} else if currentDate.Day() < everyWhen {
 		next = time.Date(currentDate.Year(), currentDate.Month(), everyWhen, 0, 0, 0, 0, time.UTC)
 	}
+
 	return next
 }
 
 func createOutputText(
 	cmdArgs []string, msg string, remainingDays, warningRemainingDays int, config *ColorConfiguration) string {
 	cmd := exec.Command(shellPresenterCommand, append(cmdArgs[:], msg)...)
+
 	cmdOut, err := cmd.Output()
 	if err != nil {
 		return msg
 	}
+
 	return withColor(string(cmdOut), remainingDays, warningRemainingDays, config)
 }
 
@@ -59,12 +62,14 @@ func withColor(msg string, remainingDays, warningRemainingDays int, config *Colo
 	} else if remainingDays == 0 {
 		return termenv.String(msg).Foreground(config.termProfile.Color(redHexColor)).String()
 	}
+
 	return termenv.String(msg).Foreground(config.termProfile.Color(greenHexColor)).String()
 }
 
 func createMessage(next, now time.Time, r Reminder) (string, int) {
 	msg := ""
 	remainingDays := daysBetween(next, now)
+
 	if remainingDays == 0 {
 		msg = fmt.Sprintf("'%s' TODAY! (%s)", r.Name, formatDate(&now))
 	} else if remainingDays < lessThanDays {
@@ -92,6 +97,7 @@ func daysBetween(a, b time.Time) int {
 
 func existsFileOrDirectory(path string) bool {
 	_, err := os.Stat(path)
+
 	return err == nil
 }
 
@@ -99,12 +105,14 @@ func extractReminderFromText(text string) (Reminder, error) {
 	if !strings.Contains(text, recordFileSeparator) {
 		return Reminder{}, fmt.Errorf("[%s] with wrong format", text)
 	}
+
 	records := strings.Split(strings.TrimSpace(text), ";")
 
 	name := records[0]
 	if len(strings.TrimSpace(name)) == 0 {
 		return Reminder{}, errors.New("not enough records in row, field1")
 	}
+
 	when := records[1]
 	if len(strings.TrimSpace(when)) == 0 {
 		return Reminder{}, errors.New("not enough records in row, field2")
@@ -132,6 +140,7 @@ func parseRemindersFromFile(filePath string) ([]Reminder, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	input := bufio.NewScanner(f)
 	reminders := make([]Reminder, 0)
 
@@ -140,10 +149,12 @@ func parseRemindersFromFile(filePath string) ([]Reminder, error) {
 		if shouldIgnoreLineInFile(line) {
 			continue
 		}
+
 		reminder, err := extractReminderFromText(line)
 		if err != nil {
 			return []Reminder{}, err
 		}
+
 		reminders = append(reminders, reminder)
 	}
 
@@ -152,6 +163,7 @@ func parseRemindersFromFile(filePath string) ([]Reminder, error) {
 
 func (r Reminder) String() string {
 	var out bytes.Buffer
+
 	out.WriteString("'")
 	out.WriteString(r.Name)
 	out.WriteString("'")
@@ -185,17 +197,21 @@ func getRemindersFilePath(remindersDirectory string) string {
 
 func readConfig(filename, configPath string, defaults map[string]interface{}) (*viper.Viper, error) {
 	v := viper.New()
+
 	for key, value := range defaults {
 		v.SetDefault(key, value)
 	}
+
 	v.SetConfigName(filename)
 	v.AddConfigPath(configPath)
 	v.SetConfigType("env")
+
 	err := v.ReadInConfig()
+
 	return v, err
 }
 
-func notifySMS(msg string, r *Reminder, envConfig *viper.Viper) error {
+func notifySMS(msg string, envConfig *viper.Viper) error {
 	auth := nexmo.NewAuthSet()
 	auth.SetAPISecret(envConfig.GetString("api_key"), envConfig.GetString("api_secret"))
 
@@ -208,10 +224,11 @@ func notifySMS(msg string, r *Reminder, envConfig *viper.Viper) error {
 	}
 
 	_, _, err := client.SMS.SendSMS(smsContent)
+
 	return err
 }
 
-func notifyEmail(msg string, r *Reminder, envConfig *viper.Viper) error {
+func notifyEmail(msg string, envConfig *viper.Viper) error {
 	from := mail.NewEmail("Leonidas", "leonidas@root.com")
 	subject := fmt.Sprintf("REMINDER -> %s", msg)
 	to := mail.NewEmail("Leo Gtz", envConfig.GetString("email_to"))
@@ -219,6 +236,7 @@ func notifyEmail(msg string, r *Reminder, envConfig *viper.Viper) error {
 	message := mail.NewSingleEmail(from, subject, to, msg, msg)
 	client := sendgrid.NewSendClient(envConfig.GetString("sendgrid_api_key"))
 	_, err := client.Send(message)
+
 	return err
 }
 
@@ -226,6 +244,7 @@ func buildHash(reminderName string) string {
 	today := time.Now()
 	text := fmt.Sprintf("%s%d%s%d", reminderName, today.Day(), today.Month(), today.Year())
 	hash := md5.Sum([]byte(text))
+
 	return hex.EncodeToString(hash[:])
 }
 
@@ -234,8 +253,10 @@ func dirExists(dirPath string) bool {
 		if os.IsNotExist(err) {
 			return false
 		}
+
 		return false
 	}
+
 	return true
 }
 
@@ -246,6 +267,7 @@ func createDirectory(dirPath string) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -253,6 +275,7 @@ func exists(name string) bool {
 	if _, err := os.Stat(name); os.IsNotExist(err) {
 		return false
 	}
+
 	return true
 }
 
@@ -268,12 +291,13 @@ func getColorConfig() ColorConfiguration {
 	return colorConfig
 }
 
-func notify(msg string, r *Reminder, envConfig *viper.Viper) error {
-	err := notifySMS(msg, r, envConfig)
+func notify(msg string, envConfig *viper.Viper) error {
+	err := notifySMS(msg, envConfig)
 	if err != nil {
 		return err
 	}
-	err = notifyEmail(msg, r, envConfig)
+
+	err = notifyEmail(msg, envConfig)
 	if err != nil {
 		return err
 	}

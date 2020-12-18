@@ -12,7 +12,6 @@ import (
 )
 
 func run(envConfig *viper.Viper) error {
-
 	remindersFile := getRemindersFilePath(path.Join(os.Getenv("HOME"), envConfig.GetString("reminders_directory")))
 	if !existsFileOrDirectory(remindersFile) {
 		return fmt.Errorf(`error: '%s' does not exist
@@ -24,6 +23,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 	}
 
 	notifsDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory, notificationsDirectory)
+
 	err := createDirectory(notifsDir)
 	if err != nil {
 		return err
@@ -39,8 +39,8 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 	sortRemindersByDay(&reminders)
 
 	now := time.Now()
-	for _, r := range reminders {
 
+	for _, r := range reminders {
 		next := nextReminderRecurrentDate(now, r.EveryWhen)
 		msg, remainingDays := createMessage(next, now, r)
 
@@ -51,12 +51,14 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 		if r.Notify && remainingDays == 0 {
 			hash := buildHash(r.Name)
 			notifHashFilePath := filepath.Join(notifsDir, hash)
+
 			if !exists(notifHashFilePath) {
-				err = notify(msg, &r, envConfig)
+				err = notify(msg, envConfig)
 				if err != nil {
 					fmt.Println(err)
 				}
-				err = ioutil.WriteFile(notifHashFilePath, []byte(r.Name), 0644)
+
+				err = ioutil.WriteFile(notifHashFilePath, []byte(r.Name), 0600)
 				if err != nil {
 					return err
 				}
@@ -68,7 +70,6 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 }
 
 func main() {
-
 	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
 		"api_key":             os.Getenv("NEXMO_API_KEY"),
 		"api_secret":          os.Getenv("NEXMO_API_SECRET"),
@@ -86,5 +87,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-
 }

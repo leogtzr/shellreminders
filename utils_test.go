@@ -30,13 +30,13 @@ func Test_buildHash(t *testing.T) {
 	}
 
 	tests := []test{
-		test{
+		{
 			reminderName: "hola",
-			want:         "a04369b08863c07411df0c19a9396f2a",
+			want:         "ff6f3a046811c67b2c3e0b6ebd534a17",
 		},
-		test{
+		{
 			reminderName: "test1",
-			want:         "c3fb3ec91f9ed1471864731aa4dc5fa0",
+			want:         "3d5d13dafdf63b89659bc8deae6996c5",
 		},
 	}
 
