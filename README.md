@@ -6,7 +6,7 @@ Because I spend a lot of time in the terminal, I can use my phone but I think th
 and my ~/.bashrc is read will make me to remember better what I have to pay. This is how it looks when I open a terminal
 emulator:
 
-![...](images/shellreminders.png)
+![...](doc_images/shellreminders.png)
 
 ```
 ./shellreminders 
