@@ -49,7 +49,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 		}
 
 		if r.Notify && remainingDays == 0 {
-			hash := buildHash(r.Name)
+			hash := buildHash(r.Name, time.Now())
 			notifHashFilePath := filepath.Join(notifsDir, hash)
 
 			if !exists(notifHashFilePath) {

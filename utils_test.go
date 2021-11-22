@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 )
 
 func Test_colorForMessages(t *testing.T) {
@@ -31,17 +32,17 @@ func Test_buildHash(t *testing.T) {
 
 	tests := []test{
 		{
-			reminderName: "hola",
-			want:         "ff6f3a046811c67b2c3e0b6ebd534a17",
+			reminderName: "him",
+			want:         "1272e1c9194cfd5797c342621ba3f2fb",
 		},
 		{
-			reminderName: "test1",
-			want:         "3d5d13dafdf63b89659bc8deae6996c5",
+			reminderName: "her",
+			want:         "58ea1b1fe5e99cc4e8f62aaed7fdc10b",
 		},
 	}
 
 	for _, tt := range tests {
-		if got := buildHash(tt.reminderName); got != tt.want {
+		if got := buildHash(tt.reminderName, time.Now()); got != tt.want {
 			t.Errorf("got=[%s], expected=[%s] for '%s' reminder name", got, tt.want, tt.reminderName)
 		}
 	}

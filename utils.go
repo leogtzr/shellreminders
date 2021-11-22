@@ -240,8 +240,7 @@ func notifyEmail(msg string, envConfig *viper.Viper) error {
 	return err
 }
 
-func buildHash(reminderName string) string {
-	today := time.Now()
+func buildHash(reminderName string, today time.Time) string {
 	text := fmt.Sprintf("%s%d%s%d", reminderName, today.Day(), today.Month(), today.Year())
 	hash := md5.Sum([]byte(text))
 
