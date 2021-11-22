@@ -1,14 +1,10 @@
-package main
+package shellreminders
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"testing"
 	"time"
-
-	"github.com/muesli/termenv"
 )
 
 func TestReminderFileParsing(t *testing.T) {
@@ -172,36 +168,6 @@ func TestSortRemindersByDay(t *testing.T) {
 
 }
 
-func TestCreateOutputText(t *testing.T) {
-	cmdArgs := [2]string{"-f", "term"}
-	msg := "'Santander Platino' in 2 days (2019/05/28 Tuesday)"
-	const expectedOutputHexString = "1b5b33383b323b3231393b3137313b3132316d2753616e74616e64657220506c6174696e6f2720696e203220646179732028323031392f30352f32382054756573646179290a1b5b306d"
-	const expectedOutputHexStringWithPresenterCommandNotFound = "2753616e74616e64657220506c6174696e6f2720696e203220646179732028323031392f30352f3238205475657364617929"
-
-	p := termenv.ColorProfile()
-	colors := colorForMessages()
-	config := ColorConfiguration{
-		colorConfiguration: colors,
-		termProfile:        p,
-	}
-
-	output := createOutputText(cmdArgs[:], msg, 2, warningRemainingDays, &config)
-	output = strings.TrimSpace(output)
-	output = strings.TrimSuffix(output, "\n")
-	output = fmt.Sprintf("%x", output)
-
-	if output != expectedOutputHexString {
-		t.Errorf("got=[%x], expected=[%x]", output, expectedOutputHexString)
-	}
-
-	cmdArgs = [2]string{"-f", "foundNotFound"}
-	output = createOutputText(cmdArgs[:], msg, 2, warningRemainingDays, &config)
-	output = fmt.Sprintf("%x", output)
-	if output != expectedOutputHexStringWithPresenterCommandNotFound {
-		t.Errorf("got=[%s], want=[%s]", output, expectedOutputHexStringWithPresenterCommandNotFound)
-	}
-}
-
 func TestNextReminderRecurrentDate(t *testing.T) {
 
 	currentDate := time.Date(2019, 5, 26, 0, 0, 0, 0, time.UTC)
@@ -282,56 +248,6 @@ func TestGetRemindersFile(t *testing.T) {
 	for _, tc := range tests {
 		if got := getRemindersFilePath(tc.baseDir); got != tc.want {
 			t.Errorf("got=[%s], want=[%s]", got, tc.want)
-		}
-	}
-}
-
-func Test_withColor(t *testing.T) {
-	type test struct {
-		msg                                 string
-		remainingDays, warningRemainingDays int
-		config                              ColorConfiguration
-		want                                string
-	}
-
-	p := termenv.ColorProfile()
-	colors := colorForMessages()
-	config := ColorConfiguration{
-		colorConfiguration: colors,
-		termProfile:        p,
-	}
-
-	tests := []test{
-		{
-			msg:                  "hola",
-			remainingDays:        2,
-			warningRemainingDays: 3,
-			config:               config,
-			want:                 "1b5b33383b323b3231393b3137313b3132316d686f6c611b5b306d",
-		},
-
-		{
-			msg:                  "abcdef",
-			remainingDays:        0,
-			warningRemainingDays: 0,
-			config:               config,
-			want:                 "1b5b33383b323b3233323b3133313b3133366d6162636465661b5b306d",
-		},
-
-		{
-			msg:                  "otro",
-			remainingDays:        10,
-			warningRemainingDays: 5,
-			config:               config,
-			want:                 "1b5b33383b323b3136383b3230343b3134306d6f74726f1b5b306d",
-		},
-	}
-
-	for _, tt := range tests {
-		got := withColor(tt.msg, tt.remainingDays, tt.warningRemainingDays, &tt.config)
-		gotHex := fmt.Sprintf("%x", got)
-		if gotHex != tt.want {
-			t.Errorf("got=[hex: '%s'], want=[%s]", gotHex, tt.want)
 		}
 	}
 }

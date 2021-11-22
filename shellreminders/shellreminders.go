@@ -1,4 +1,4 @@
-package main
+package shellreminders
 
 import (
 	"fmt"
@@ -11,8 +11,28 @@ import (
 	"github.com/spf13/viper"
 )
 
-func run(envConfig *viper.Viper) error {
-	remindersFile := getRemindersFilePath(path.Join(os.Getenv("HOME"), envConfig.GetString("reminders_directory")))
+type appEnv struct {
+	envConfig *viper.Viper
+}
+
+func CLI(args []string) int {
+	var app appEnv
+	err := app.fromArgs(args)
+	if err != nil {
+		return errorBuildingAppConfigFromArgs
+	}
+
+	if err = app.run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+
+		return errorRunningApplication
+	}
+
+	return 0
+}
+
+func (app *appEnv) run() error {
+	remindersFile := getRemindersFilePath(path.Join(os.Getenv("HOME"), app.envConfig.GetString("reminders_directory")))
 	if !existsFileOrDirectory(remindersFile) {
 		return fmt.Errorf(`error: '%s' does not exist
 
@@ -53,7 +73,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 			notifHashFilePath := filepath.Join(notifsDir, hash)
 
 			if !exists(notifHashFilePath) {
-				err = notify(msg, envConfig)
+				err = notify(msg, app.envConfig)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -69,7 +89,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 	return nil
 }
 
-func main() {
+func (app *appEnv) fromArgs(args []string) error {
 	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
 		"api_key":             os.Getenv("NEXMO_API_KEY"),
 		"api_secret":          os.Getenv("NEXMO_API_SECRET"),
@@ -79,12 +99,9 @@ func main() {
 		"email_to":            "",
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
+		return err
 	}
+	app.envConfig = envConfig
 
-	if err := run(envConfig); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
-	}
+	return nil
 }

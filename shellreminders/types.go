@@ -1,4 +1,4 @@
-package main
+package shellreminders
 
 import "github.com/muesli/termenv"
 
