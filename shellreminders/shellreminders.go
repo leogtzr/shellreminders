@@ -17,6 +17,7 @@ type appEnv struct {
 
 func CLI(args []string) int {
 	var app appEnv
+
 	err := app.fromArgs(args)
 	if err != nil {
 		return errorBuildingAppConfigFromArgs

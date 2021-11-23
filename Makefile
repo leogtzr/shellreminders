@@ -14,8 +14,8 @@ check:
 	go test -v ./shellreminders/...	
 
 cover:
-	go test -coverprofile ./cp.out ./shellreminders/...
+	go test -v ./shellreminders/... -coverprofile ./cp.out
 	go tool cover -html=cp.out
 
 test:
-	go test
+	go test -v ./shellreminders/...	
