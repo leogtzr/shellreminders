@@ -1,5 +1,9 @@
+.DEFAULT_GOAL := build
 INSTALL_SCRIPT=./install.sh
 BIN_FILE=./remindthis
+
+build:
+	go build -o "${BIN_FILE}"
 
 install:
 	go build -o "${BIN_FILE}"

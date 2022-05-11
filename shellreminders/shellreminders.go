@@ -2,10 +2,8 @@ package shellreminders
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"time"
 
 	"github.com/spf13/viper"
@@ -42,14 +40,6 @@ Create the file '%s' with a content such as the following:
 Cancel UFCFightPass;29;true
 Pagar Internet;7;true`, remindersFile, remindersFile)
 	}
-
-	notifsDir := path.Join(os.Getenv("HOME"), shellReminderMainDirectory, notificationsDirectory)
-
-	err := createDirectory(notifsDir)
-	if err != nil {
-		return err
-	}
-
 	reminders, err := parseRemindersFromFile(remindersFile)
 	if err != nil {
 		return err
@@ -70,20 +60,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 		}
 
 		if r.Notify && remainingDays == 0 {
-			hash := buildHash(r.Name, time.Now())
-			notifHashFilePath := filepath.Join(notifsDir, hash)
-
-			if !exists(notifHashFilePath) {
-				err = notify(msg, app.envConfig)
-				if err != nil {
-					fmt.Println(err)
-				}
-
-				err = ioutil.WriteFile(notifHashFilePath, []byte(r.Name), 0600)
-				if err != nil {
-					return err
-				}
-			}
+			fmt.Println(createOutputText(cmdArgs[:], msg, remainingDays, warningRemainingDays, &colorConfig))
 		}
 	}
 
@@ -92,12 +69,7 @@ Pagar Internet;7;true`, remindersFile, remindersFile)
 
 func (app *appEnv) fromArgs(args []string) error {
 	envConfig, err := readConfig("shellreminders.env", os.Getenv("HOME"), map[string]interface{}{
-		"api_key":             os.Getenv("NEXMO_API_KEY"),
-		"api_secret":          os.Getenv("NEXMO_API_SECRET"),
-		"to_phone":            os.Getenv("NOTIFY_PHONE"),
-		"sendgrid_api_key":    os.Getenv("SENDGRID_API_KEY"),
-		"reminders_directory": shellReminderMainDirectory,
-		"email_to":            "",
+		// empty for now
 	})
 	if err != nil {
 		return err

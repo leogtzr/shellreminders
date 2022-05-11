@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -17,9 +16,6 @@ import (
 	"time"
 
 	"github.com/muesli/termenv"
-	"github.com/nexmo-community/nexmo-go"
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/spf13/viper"
 )
 
@@ -211,35 +207,6 @@ func readConfig(filename, configPath string, defaults map[string]interface{}) (*
 	return v, err
 }
 
-func notifySMS(msg string, envConfig *viper.Viper) error {
-	auth := nexmo.NewAuthSet()
-	auth.SetAPISecret(envConfig.GetString("api_key"), envConfig.GetString("api_secret"))
-
-	client := nexmo.NewClient(http.DefaultClient, auth)
-
-	smsContent := nexmo.SendSMSRequest{
-		From: "447700900004",
-		To:   envConfig.GetString("to_phone"),
-		Text: msg,
-	}
-
-	_, _, err := client.SMS.SendSMS(smsContent)
-
-	return err
-}
-
-func notifyEmail(msg string, envConfig *viper.Viper) error {
-	from := mail.NewEmail("Leonidas", "leonidas@root.com")
-	subject := fmt.Sprintf("REMINDER -> %s", msg)
-	to := mail.NewEmail("Leo Gtz", envConfig.GetString("email_to"))
-
-	message := mail.NewSingleEmail(from, subject, to, msg, msg)
-	client := sendgrid.NewSendClient(envConfig.GetString("sendgrid_api_key"))
-	_, err := client.Send(message)
-
-	return err
-}
-
 func buildHash(reminderName string, today time.Time) string {
 	text := fmt.Sprintf("%s%d%s%d", reminderName, today.Day(), today.Month(), today.Year())
 	hash := md5.Sum([]byte(text))
@@ -288,17 +255,4 @@ func getColorConfig() ColorConfiguration {
 	}
 
 	return colorConfig
-}
-
-func notify(msg string, envConfig *viper.Viper) error {
-	err := notifySMS(msg, envConfig)
-	if err != nil {
-		return err
-	}
-
-	err = notifyEmail(msg, envConfig)
-	if err != nil {
-		return err
-	}
-	return nil
 }
